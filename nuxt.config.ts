@@ -53,7 +53,11 @@ export default defineNuxtConfig({
       repo: process.env.GITHUB_REPO || '',
       branch: process.env.GITHUB_BRANCH || 'main',
       committerName: process.env.GITHUB_COMMITTER_NAME || 'Kakin Studio Bot',
-      committerEmail: process.env.GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio'
+      committerEmail: process.env.GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio',
+      // 国内服务器：https://api.github.com 常被墙/超时，填反向代理地址
+      // 示例1（公开 ghproxy）：https://ghproxy.com/https://api.github.com
+      // 示例2（自建 fastgithub）：https://gh.yourdomain.com/api
+      baseUrl: process.env.GITHUB_API_BASE || ''
     },
     public: {
       siteName: 'Kakin Studio',
