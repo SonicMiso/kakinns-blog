@@ -1,0 +1,346 @@
+<script setup lang="ts">
+import type { Journal } from '~/types'
+import { formatDate } from '~/utils/format'
+
+definePageMeta({
+  layout: false
+})
+
+const { checkAuth } = useAuth()
+
+const page = ref(1)
+const limit = ref(10)
+const statusFilter = ref<string>('')
+
+const { data: journalsData, refresh } = await useAsyncData('admin-journal', () =>
+  $fetch('/api/admin/journal', {
+    query: {
+      page: page.value,
+      limit: limit.value,
+      ...(statusFilter.value ? { status: statusFilter.value } : {})
+    }
+  })
+, {
+  default: () => ({ items: [] as Journal[], total: 0, page: 1, limit: 10 })
+})
+
+async function handleDelete(id: number) {
+  if (!confirm('确定要删除这篇日志吗？')) return
+  try {
+    await $fetch(`/api/admin/journal/${id}`, { method: 'DELETE' })
+    await refresh()
+  } catch (e) {
+    alert('删除失败')
+  }
+}
+
+function toggleStatus(journal: Journal) {
+  const newStatus = journal.status === 'published' ? 'draft' : 'published'
+  $fetch(`/api/admin/journal/${journal.id}`, {
+    method: 'PUT',
+    body: { status: newStatus }
+  }).then(() => refresh())
+}
+
+watch([page, statusFilter], () => {
+  refresh()
+})
+
+onMounted(() => {
+  checkAuth()
+})
+
+useHead({
+  title: '日志管理 — 管理后台'
+})
+</script>
+
+<template>
+  <AdminLayout>
+    <div class="admin-journal">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">日志管理</h1>
+          <p class="page-desc">管理所有制作日志</p>
+        </div>
+        <NuxtLink to="/admin/journal/new" class="btn-primary">新建日志</NuxtLink>
+      </header>
+
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>状态</label>
+          <select v-model="statusFilter">
+            <option value="">全部</option>
+            <option value="published">已发布</option>
+            <option value="draft">草稿</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>标题</th>
+              <th>日期</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="journal in journalsData.items" :key="journal.id">
+              <td class="title-cell">
+                <NuxtLink :to="`/admin/journal/${journal.id}`" class="journal-title">
+                  {{ journal.title }}
+                </NuxtLink>
+              </td>
+              <td>{{ formatDate(journal.date) }}</td>
+              <td>
+                <button class="status-toggle" @click="toggleStatus(journal)">
+                  <span :class="`status-badge status-${journal.status}`">
+                    {{ journal.status === 'published' ? '已发布' : '草稿' }}
+                  </span>
+                </button>
+              </td>
+              <td>
+                <div class="actions">
+                  <NuxtLink :to="`/admin/journal/${journal.id}`" class="action-link">编辑</NuxtLink>
+                  <button class="action-link delete" @click="handleDelete(journal.id)">删除</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div v-if="journalsData.items.length === 0" class="empty-state">
+          暂无日志
+        </div>
+      </div>
+
+      <div v-if="journalsData.total > limit" class="pagination">
+        <button
+          class="page-btn"
+          :disabled="page <= 1"
+          @click="page = Math.max(1, page - 1)"
+        >
+          上一页
+        </button>
+        <span class="page-info">第 {{ page }} 页 / 共 {{ Math.ceil(journalsData.total / limit) }} 页</span>
+        <button
+          class="page-btn"
+          :disabled="page >= Math.ceil(journalsData.total / limit)"
+          @click="page = Math.min(Math.ceil(journalsData.total / limit), page + 1)"
+        >
+          下一页
+        </button>
+      </div>
+    </div>
+  </AdminLayout>
+</template>
+
+<style scoped>
+.admin-journal {
+  max-width: 900px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--space-6);
+}
+
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.page-desc {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-text);
+  color: white;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-primary:hover {
+  background: var(--color-accent);
+  color: white;
+}
+
+.filter-bar {
+  background: white;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  margin-bottom: var(--space-6);
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.filter-group select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: var(--color-surface);
+}
+
+.data-table-wrapper {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: 0.9rem;
+}
+
+.data-table th {
+  background: var(--color-surface);
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover td {
+  background: var(--color-surface);
+}
+
+.title-cell {
+  max-width: 400px;
+}
+
+.journal-title {
+  color: var(--color-text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.journal-title:hover {
+  color: var(--color-accent);
+}
+
+.status-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.status-published {
+  background: rgba(90, 138, 106, 0.1);
+  color: var(--color-success);
+}
+
+.status-draft {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.action-link {
+  font-size: 0.85rem;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.action-link.delete {
+  color: var(--color-error);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-12);
+  color: var(--color-text-muted);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.page-btn {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: white;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+</style>

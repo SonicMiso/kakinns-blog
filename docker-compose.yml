@@ -1,0 +1,30 @@
+services:
+  kakins-blog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kakins-blog:latest
+    container_name: kakins-blog
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - SESSION_SECRET=${SESSION_SECRET:-please-change-this}
+      # 后台写内容时 commit 回 GitHub（Git-based CMS 核心凭据）
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_OWNER=${GITHUB_OWNER:-}
+      - GITHUB_REPO=${GITHUB_REPO:-}
+      - GITHUB_BRANCH=${GITHUB_BRANCH:-main}
+      - GITHUB_COMMITTER_NAME=${GITHUB_COMMITTER_NAME:-Kakin Studio Bot}
+      - GITHUB_COMMITTER_EMAIL=${GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}
+    # 内容完全来自 Git + 构建 SQLite dump，不再需要数据卷。
+    # sessions 已改为签名 cookie，无服务端状态。
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
