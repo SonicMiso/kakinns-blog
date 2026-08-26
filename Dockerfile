@@ -43,7 +43,9 @@ COPY --from=builder /app/package.json ./package.json
 
 EXPOSE 3000
 
+# HEALTHCHECK：node:26-alpine 默认不预装 wget/curl（alpine 精简），
+# 用 Node 26 内置的 fetch + 进程退出码 0/1，不依赖任何额外二进制
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -qO- http://localhost:3000/ > /dev/null 2>&1 || exit 1
+  CMD node -e "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", ".output/server/index.mjs"]
