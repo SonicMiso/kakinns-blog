@@ -13,22 +13,9 @@ RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 # 通过环境变量注入 registry，比写 .npmrc 更灵活（CI 可覆盖）
 ENV PNPM_CONFIG_REGISTRY=${PNPM_REGISTRY}
 
-# 先拷贝锁文件 + package 元信息，最大化利用 layer cache（依赖不变时直接复用）
-# 注意：Windows Docker Desktop 传 build context 给 Linux VM 时，dotfiles（以 . 开头）
-# 有时在合并 COPY 中被解析为根路径下的文件（"/.npmrc": not found）。
-# 拆成独立 COPY，每个文件单独定位，避免整层因一个 dotfiles 失败。
-COPY package.json ./
-COPY pnpm-lock.yaml ./
-# pnpm 11：构建脚本批准、hoist 策略等非 auth 配置均在此文件（必填）
-COPY pnpm-workspace.yaml ./
-# .npmrc：仅 registry/auth，而 Dockerfile 已通过 ENV PNPM_CONFIG_REGISTRY 注入镜像源，
-# 非 auth 场景即使缺失也不影响；存在时可补充私有 registry auth（如 //registry.npmmirror.com/:_authToken）
-# 先用 shell 试探存在就复制，缺失跳过 — 比纯 COPY 更鲁棒
-RUN (if [ -f /tmp/.docker-build-ctx-marker ]; then :; fi) 2>/dev/null || true
-COPY .npmrc* ./
-# pnpm install 前确保 .npmrc 存在（缺失就建空文件，避免 pnpm 在某些 strict 模式下报 RC 路径错误）
-RUN if [ ! -f .npmrc ]; then touch .npmrc; fi
-
+# 先拷贝锁文件 + package 元信息 + workspace 配置，最大化利用 layer cache
+# pnpm 11：构建脚本批准、hoist 策略等均在 pnpm-workspace.yaml 中声明
+COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml ./
 # --frozen-lockfile：如果 lock 缺失/不匹配直接失败（避免 CI 偷偷改）
 # 不做 --prod 因为 nuxt build 需要 devDependencies（nuxt/content 全在 devDeps 也能跑，但这里统一 dev 安装）
 RUN pnpm install --frozen-lockfile
