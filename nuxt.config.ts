@@ -40,12 +40,12 @@ export default defineNuxtConfig({
     '/journal': { prerender: true },
     '/journal/**': { prerender: true },
     '/about': { prerender: true },
-    // 后台：SSR（实时调 GitHub API 提交 commit）
-    '/admin/**': { ssr: true }
+    // 后台：纯客户端渲染（CSR），避免 SSR cookie 转发的竞态问题
+    '/admin/**': { ssr: false }
   },
   runtimeConfig: {
     adminUsername: process.env.ADMIN_USERNAME || 'admin',
-    adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+    adminPassword: process.env.ADMIN_PASSWORD || 'admin',
     sessionSecret: process.env.SESSION_SECRET || 'kakin-studio-secret-key-please-change',
     // GitHub 凭据：后台写内容时通过 octokit 把变更 commit 到仓库，触发 CI 重建
     github: {

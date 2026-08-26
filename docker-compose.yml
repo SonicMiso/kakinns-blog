@@ -14,7 +14,7 @@ services:
     environment:
       - NODE_ENV=production
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       - SESSION_SECRET=${SESSION_SECRET:-please-change-this}
       # 后台写内容时 commit 回 GitHub（Git-based CMS 核心凭据）
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
