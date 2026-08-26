@@ -1,6 +1,5 @@
 ---
 title: 植物染围巾
-slug: natural-dye-scarf-01
 date: "2026-01-10"
 category: textile
 cover: /images/works/dye-scarf-01-cover.jpg
@@ -10,8 +9,6 @@ tools: ["染锅", "木棒", "晾晒架"]
 gallery: ["/images/works/dye-scarf-01-01.jpg"]
 featured: false
 status: published
-createdAt: "2026-01-10T00:00:00.000Z"
-updatedAt: "2026-01-10T00:00:00.000Z"
 ---
 
 ## 媒染

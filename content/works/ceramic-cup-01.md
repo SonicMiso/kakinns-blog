@@ -1,6 +1,5 @@
 ---
 title: 手工陶瓷茶杯
-slug: ceramic-cup-01
 date: "2026-02-20"
 category: ceramics
 cover: /images/works/ceramic-cup-01-cover.jpg
@@ -10,8 +9,6 @@ tools: ["拉坯机", "修坯刀", "窑炉"]
 gallery: ["/images/works/ceramic-cup-01-01.jpg", "/images/works/ceramic-cup-01-02.jpg"]
 featured: true
 status: published
-createdAt: "2026-02-20T00:00:00.000Z"
-updatedAt: "2026-02-20T00:00:00.000Z"
 ---
 
 ## 拉坯
