@@ -1,8 +1,3 @@
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 export default defineNuxtConfig({
   modules: ['@nuxt/content'],
   devtools: { enabled: true },
@@ -10,23 +5,10 @@ export default defineNuxtConfig({
   srcDir: 'app',
   css: ['~/assets/css/tokens.css', '~/assets/css/typography.css', '~/assets/css/globals.css'],
   content: {
-    // 【关键】显式声明 content sources = 项目根目录下的 content/
-    // 由于设置了 srcDir = 'app'，Nuxt Content 在某些构建环境中会尝试去 app/content 找数据，
-    // 导致 Docker/VPS 构建时发现 0 个 markdown 文件，SQLite dump 为空 → 前台全空。
-    // 用绝对路径锁定数据源避免任何路径解析歧义。
-    sources: {
-      works: {
-        driver: 'fs',
-        base: path.resolve(__dirname, 'content/works'),
-        prefix: '/works'
-      },
-      journal: {
-        driver: 'fs',
-        base: path.resolve(__dirname, 'content/journal'),
-        prefix: '/journal'
-      }
-    },
     experimental: {
+      // 使用 Node.js 22.5+ 内置原生 SQLite，跳过 better-sqlite3 原生编译
+      // NOTE: 依赖升级（如 pnpm 11）后 better-sqlite3 需重编译，原生方案更稳定
+      // 参见 https://content.nuxt.com/docs/getting-started/configuration#experimentalsqliteconnector
       sqliteConnector: 'native'
     },
     build: {
@@ -51,13 +33,13 @@ export default defineNuxtConfig({
     }
   },
   routeRules: {
-    // 前台：SSR + SWR 60s，兼顾内容刷新（CI/CD rebuild 后 1 分钟内看到更新）
-    '/': { ssr: true, swr: 60 },
-    '/works': { ssr: true, swr: 60 },
-    '/works/**': { ssr: true, swr: 60 },
-    '/journal': { ssr: true, swr: 60 },
-    '/journal/**': { ssr: true, swr: 60 },
-    '/about': { ssr: true, swr: 60 },
+    // 前台走 Nuxt Content SQLite dump + 客户端 WASM，纯静态也能工作
+    '/': { prerender: true },
+    '/works': { prerender: true },
+    '/works/**': { prerender: true },
+    '/journal': { prerender: true },
+    '/journal/**': { prerender: true },
+    '/about': { prerender: true },
     // 后台：纯客户端渲染（CSR），避免 SSR cookie 转发的竞态问题
     '/admin/**': { ssr: false }
   },
