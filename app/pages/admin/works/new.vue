@@ -6,7 +6,7 @@ definePageMeta({
   layout: false
 })
 
-const { checkAuth } = useAuth()
+const {} = useAuth()
 
 const form = ref({
   title: '',

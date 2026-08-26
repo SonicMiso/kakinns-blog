@@ -6,7 +6,7 @@ definePageMeta({
   layout: false
 })
 
-const { checkAuth } = useAuth()
+const {} = useAuth()
 const route = useRoute()
 const id = parseInt(route.params.id as string)
 
@@ -24,7 +24,6 @@ const loading = ref(false)
 const saving = ref(false)
 
 onMounted(async () => {
-  await checkAuth()
   loading.value = true
   try {
     const journal = (await $fetch<any>(`/api/admin/journal/${id}`)) as Journal & Record<string, any>

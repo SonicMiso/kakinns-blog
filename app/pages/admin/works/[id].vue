@@ -7,7 +7,7 @@ definePageMeta({
   layout: false
 })
 
-const { checkAuth } = useAuth()
+const {} = useAuth()
 const route = useRoute()
 const id = parseInt(route.params.id as string)
 

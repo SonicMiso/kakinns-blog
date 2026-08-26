@@ -5,22 +5,18 @@ definePageMeta({
   layout: false
 })
 
-const { isAuthenticated, isLoading, checkAuth } = useAuth()
+const { isAuthenticated, isLoading } = useAuth()
 
+// 路由层 auth.global.ts 已保证进入此页一定已登录
+// admin = ssr:false，纯 CSR，$fetch 自动带浏览器 cookie，无需 useRequestHeaders
 const { data: worksStats } = await useFetch('/api/admin/works', {
   query: { limit: 5 },
-  headers: useRequestHeaders(['cookie']) as Record<string, string>,
   default: () => ({ items: [] as Work[], total: 0 })
 })
 
 const { data: journalStats } = await useFetch('/api/admin/journal', {
   query: { limit: 5 },
-  headers: useRequestHeaders(['cookie']) as Record<string, string>,
   default: () => ({ items: [] as Journal[], total: 0 })
-})
-
-onMounted(() => {
-  checkAuth()
 })
 
 useHead({

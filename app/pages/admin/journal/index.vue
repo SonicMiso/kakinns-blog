@@ -6,17 +6,15 @@ definePageMeta({
   layout: false
 })
 
-const { checkAuth } = useAuth()
+const { isAuthenticated, isLoading } = useAuth()
 
 const page = ref(1)
 const limit = ref(10)
 const statusFilter = ref<string>('')
 
+// admin = ssr:false，纯 CSR，$fetch 自动带浏览器 cookie，无需 useRequestHeaders
 const { data: journalsData, refresh } = await useAsyncData('admin-journal', () => {
-  // SSR 时 $fetch 不会自动携带浏览器 cookie，需要手动转发给 admin API（auth middleware 依赖它）
-  const headers = useRequestHeaders(['cookie'])
   return $fetch('/api/admin/journal', {
-    headers: headers.cookie ? { cookie: headers.cookie } : undefined,
     query: {
       page: page.value,
       limit: limit.value,
@@ -47,10 +45,6 @@ function toggleStatus(journal: Journal) {
 
 watch([page, statusFilter], () => {
   refresh()
-})
-
-onMounted(() => {
-  checkAuth()
 })
 
 useHead({
