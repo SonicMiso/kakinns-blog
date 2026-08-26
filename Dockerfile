@@ -6,8 +6,13 @@ FROM node:26-alpine AS builder
 ARG PNPM_REGISTRY=https://registry.npmmirror.com
 WORKDIR /app
 
-# 启用 Node 自带的 corepack 拿到对应版本的 pnpm（锁定 packageManager 版本，团队一致）
-RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
+# 安装与 package.json 中 packageManager 字段一致版本的 pnpm
+# 说明：node:26-alpine 镜像不预装 corepack（精简版为减小体积剔除了非核心 CLI），
+# 直接用 npm 全局安装 pnpm 更稳定，且无需额外 RUN apk 层或 corepack enable/prepare 两步调用
+ARG PNPM_VERSION=11.24.0
+RUN npm install -g pnpm@${PNPM_VERSION} \
+    && npm cache clean --force \
+    && pnpm --version
 
 # pnpm 11 起，环境变量前缀为 PNPM_CONFIG_（不再读取 NPM_CONFIG_*）
 # 通过环境变量注入 registry，比写 .npmrc 更灵活（CI 可覆盖）
