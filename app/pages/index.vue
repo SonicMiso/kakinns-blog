@@ -67,7 +67,7 @@ useHead({
         </div>
 
         <div class="works-grid">
-          <WorkCard v-for="work in featuredWorks.items" :key="work.id" :work="work" />
+          <WorkCard v-for="work in featuredWorks.items" :key="work.slug" :work="work" />
         </div>
       </div>
     </section>
@@ -83,7 +83,7 @@ useHead({
         </div>
 
         <div class="journal-list">
-          <JournalCard v-for="journal in recentJournals.items" :key="journal.id" :journal="journal" />
+          <JournalCard v-for="journal in recentJournals.items" :key="journal.slug" :journal="journal" />
         </div>
       </div>
     </section>

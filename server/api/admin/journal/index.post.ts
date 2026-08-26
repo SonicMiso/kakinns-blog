@@ -2,10 +2,11 @@ import type { Journal } from '~/types'
 import { queryCollection } from '@nuxt/content/server'
 import { commitContentChanges } from '../../../utils/github'
 
+// ⚠️ 绝对禁止手写 frontmatter 'id' 字段
 function frontmatter(obj: Record<string, any>) {
   const lines: string[] = []
   for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined) continue
+    if (k === 'id' || v === undefined) continue
     if (typeof v === 'string') lines.push(`${k}: ${JSON.stringify(v)}`)
     else lines.push(`${k}: ${JSON.stringify(v)}`)
   }
@@ -18,39 +19,30 @@ export default defineEventHandler(async (event) => {
   const title = body.title || '未命名日志'
   const now = new Date().toISOString()
 
-  const all = (await queryCollection<Journal>(event, 'journal').all()) as Journal[]
-  const maxId = all.reduce((m, j) => Math.max(m, j.id || 0), 0)
-
-  const journal: Journal = {
-    id: maxId + 1,
+  const meta: Record<string, any> = {
     title,
     slug,
     date: body.date || new Date().toISOString().split('T')[0],
+    createdAt: now,    // ⚠️ 后端强制
+    updatedAt: now,    // ⚠️ 后端强制
     cover: body.cover || '',
     excerpt: body.excerpt || '',
-    status: body.status || 'draft',
-    createdAt: now,
-    updatedAt: now,
-    content: body.content || ''
+    status: body.status || 'draft'
   }
 
-  const fm = frontmatter({
-    id: journal.id,
-    title: journal.title,
-    slug: journal.slug,
-    date: journal.date,
-    cover: journal.cover,
-    excerpt: journal.excerpt,
-    status: journal.status,
-    createdAt: journal.createdAt,
-    updatedAt: journal.updatedAt
-  })
-  const mdContent = fm + (journal.content || '') + '\n'
+  // slug 唯一性检查
+  const dup = (await queryCollection<Journal>(event, 'journal').where('slug', '=', slug).limit(1).all()) as Journal[]
+  if (dup.length > 0) {
+    throw createError({ statusCode: 409, statusMessage: `slug ${slug} 已存在` })
+  }
+
+  const fm = frontmatter(meta)
+  const mdContent = fm + (body.content || '') + '\n'
 
   await commitContentChanges({
     message: `feat(journal): 新建日志 ${title} (${slug})`,
     upserts: [{ path: `content/journal/${slug}.md`, content: mdContent }]
   })
 
-  return journal
+  return { ...meta, content: body.content || '' } as Journal
 })

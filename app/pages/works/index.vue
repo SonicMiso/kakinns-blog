@@ -7,10 +7,14 @@ const activeCategory = ref<string | null>(null)
 
 const worksList = ref<Work[]>([])
 
+function setCategory(cat: string | null) {
+  activeCategory.value = cat
+}
+
 async function loadWorks() {
   let q = queryCollection<Work>('works').where('status', '=', 'published') as any
   if (activeCategory.value) q = q.where('category', '=', activeCategory.value)
-  worksList.value = await q.order('date', 'DESC').order('createdAt', 'DESC').all() as Work[]
+  worksList.value = await q.order('date', 'DESC').all() as Work[]
 }
 
 // 初始 + 分类变化时刷新
@@ -56,7 +60,7 @@ useHead({
 
       <section class="works-section section">
         <div v-if="worksData.items.length > 0" class="works-grid">
-          <WorkCard v-for="work in worksData.items" :key="work.id" :work="work" />
+          <WorkCard v-for="work in worksData.items" :key="work.slug" :work="work" />
         </div>
         <div v-else class="empty-state">
           <p>暂无作品</p>

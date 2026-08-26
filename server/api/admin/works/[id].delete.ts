@@ -2,9 +2,10 @@ import type { Work } from '~/types'
 import { queryCollection } from '@nuxt/content/server'
 import { commitContentChanges } from '../../../utils/github'
 
+// 路由参数语义：slug（字符串）
 export default defineEventHandler(async (event) => {
-  const id = parseInt(getRouterParam(event, 'id') || '0')
-  const matches = (await queryCollection<Work>(event, 'works').where('id', '=', id).limit(1).all()) as Work[]
+  const slug = getRouterParam(event, 'id') || ''
+  const matches = (await queryCollection<Work>(event, 'works').where('slug', '=', slug).limit(1).all()) as Work[]
   const work = matches[0] as any
   if (!work) throw createError({ statusCode: 404, statusMessage: 'Work not found' })
 

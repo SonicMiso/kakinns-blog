@@ -7,9 +7,12 @@ definePageMeta({
   layout: false
 })
 
-const {} = useAuth()
+const { checkAuth } = useAuth()
 const route = useRoute()
-const id = parseInt(route.params.id as string)
+// 路由文件还是 [id]，但语义已经是 slug（字符串唯一标识）
+const slug = route.params.id as string
+
+const timestamps = ref({ createdAt: '', updatedAt: '' })
 
 const form = ref({
   title: '',
@@ -33,7 +36,11 @@ onMounted(async () => {
   await checkAuth()
   loading.value = true
   try {
-    const work = (await $fetch<any>(`/api/admin/works/${id}`)) as Work & Record<string, any>
+    const work = (await $fetch<any>(`/api/admin/works/${slug}`)) as Work & Record<string, any>
+    timestamps.value = {
+      createdAt: work.createdAt || '',
+      updatedAt: work.updatedAt || ''
+    }
     form.value = {
       title: work.title,
       slug: work.slug,
@@ -69,7 +76,7 @@ async function handleSave() {
   }
   saving.value = true
   try {
-    await $fetch(`/api/admin/works/${id}`, {
+    await $fetch(`/api/admin/works/${slug}`, {
       method: 'PUT',
       body: {
         ...form.value,
@@ -78,6 +85,8 @@ async function handleSave() {
         gallery: form.value.gallery.split('\n').filter(g => g.trim())
       }
     })
+    // 保存成功后刷新 updatedAt 显示
+    timestamps.value.updatedAt = new Date().toISOString()
     alert('保存成功')
   } catch (e) {
     alert('保存失败')
@@ -89,7 +98,7 @@ async function handleSave() {
 async function handleDelete() {
   if (!confirm('确定要删除这个作品吗？')) return
   try {
-    await $fetch(`/api/admin/works/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/admin/works/${slug}`, { method: 'DELETE' })
     await navigateTo('/admin/works')
   } catch (e) {
     alert('删除失败')
@@ -192,6 +201,16 @@ useHead({
               <input type="checkbox" v-model="form.featured" />
               <span>在首页精选展示</span>
             </label>
+          </div>
+
+          <div class="form-group">
+            <label>创建时间（后端自动）</label>
+            <input :value="timestamps.createdAt" type="text" disabled class="readonly-input" />
+          </div>
+
+          <div class="form-group">
+            <label>更新时间（后端自动）</label>
+            <input :value="timestamps.updatedAt" type="text" disabled class="readonly-input" />
           </div>
         </div>
       </div>
@@ -338,6 +357,14 @@ useHead({
   height: 18px;
   cursor: pointer;
   padding: 0;
+}
+
+.readonly-input {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
 }
 
 .loading-state {

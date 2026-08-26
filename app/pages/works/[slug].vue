@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { Work } from '~/types'
-import { formatDate, formatDateLong, getCategoryLabel } from '~/utils/format'
+import { formatDate, formatDateLong, formatCreatedUpdated, getCategoryLabel } from '~/utils/format'
 
 const route = useRoute()
 const slug = route.params.slug as string
 
+// slug = 文件名（不含扩展名），content.config.ts 中 schema 显式声明为 z.string()
+// → SQLite TEXT 列，不会走 INT 分支 → 原厂包无 patch 也能正确写库。
 const { data: work } = await useAsyncData(`work-${slug}`, () =>
   queryCollection<Work>('works').where('slug', '=', slug).where('status', '=', 'published').first()
 )
@@ -60,6 +62,12 @@ const workProcess = computed(() => {
   return extractBodyText(raw)
 })
 
+const timestamps = computed(() => {
+  const w = work.value
+  if (!w) return null
+  return formatCreatedUpdated(w.createdAt, w.updatedAt, { withTime: true })
+})
+
 useHead(() => ({
   title: `${work.value?.title} — Kakin Studio`,
   meta: [
@@ -77,6 +85,14 @@ useHead(() => ({
           <span class="category">{{ getCategoryLabel(work.category) }}</span>
           <span class="dot">·</span>
           <span class="date">{{ formatDateLong(work.date) }}</span>
+          <template v-if="timestamps && timestamps.created">
+            <span class="dot">·</span>
+            <span class="meta-time" :title="`创建于 ${timestamps.created}`">创建 {{ timestamps.created }}</span>
+          </template>
+          <template v-if="timestamps && timestamps.updated">
+            <span class="dot">·</span>
+            <span class="meta-time muted" :title="`最后更新 ${timestamps.updated}`">更新 {{ timestamps.updated }}</span>
+          </template>
         </div>
         <h1 class="work-title">{{ work.title }}</h1>
         <p class="work-excerpt">{{ work.excerpt }}</p>
@@ -169,8 +185,17 @@ useHead(() => ({
   font-weight: 500;
 }
 
-.dot {
+.date {
   opacity: 0.5;
+}
+
+.meta-time {
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+
+.meta-time.muted {
+  opacity: 0.45;
 }
 
 .work-title {

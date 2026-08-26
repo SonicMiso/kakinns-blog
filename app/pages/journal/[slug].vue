@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { Journal } from '~/types'
-import { formatDateLong } from '~/utils/format'
+import { formatDateLong, formatCreatedUpdated } from '~/utils/format'
 
 const route = useRoute()
 const slug = route.params.slug as string
 
+// slug = 文件名（不含扩展名），content.config.ts 中 schema 显式声明为 z.string()
+// → SQLite TEXT 列，不会走 INT 分支 → 原厂包无 patch 也能正确写库。
 const { data: journal } = await useAsyncData(`journal-${slug}`, () =>
   queryCollection<Journal>('journal').where('slug', '=', slug).where('status', '=', 'published').first()
 )
@@ -60,6 +62,12 @@ const journalBody = computed(() => {
   return extractBodyText(raw)
 })
 
+const timestamps = computed(() => {
+  const j = journal.value
+  if (!j) return null
+  return formatCreatedUpdated(j.createdAt, j.updatedAt, { withTime: true })
+})
+
 useHead(() => ({
   title: `${journal.value?.title} — Kakin Studio`,
   meta: [
@@ -73,7 +81,12 @@ useHead(() => ({
     <div class="container-narrow">
       <header class="journal-header">
         <NuxtLink to="/journal" class="back-link">← 返回日志列表</NuxtLink>
-        <p class="journal-date">{{ formatDateLong(journal.date) }}</p>
+        <p class="journal-date">{{ formatDateLong(journal.date) }}
+          <template v-if="timestamps && (timestamps.created || timestamps.updated)">
+            <template v-if="timestamps.created"> · 创建 {{ timestamps.created }}</template>
+            <template v-if="timestamps.updated"> · <span class="muted">更新 {{ timestamps.updated }}</span></template>
+          </template>
+        </p>
         <h1 class="journal-title">{{ journal.title }}</h1>
       </header>
 
@@ -129,6 +142,10 @@ useHead(() => ({
   font-size: 0.9rem;
   color: var(--color-text-muted);
   margin-bottom: var(--space-4);
+}
+
+.journal-date .muted {
+  opacity: 0.6;
 }
 
 .journal-title {

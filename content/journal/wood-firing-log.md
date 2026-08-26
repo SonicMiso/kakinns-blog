@@ -1,12 +1,12 @@
 ---
-title: 柴窑烧成记录
 slug: wood-firing-log
+title: 柴窑烧成记录
 date: "2026-02-25"
+createdAt: "2026-02-25T02:00:00Z"
+updatedAt: "2026-02-25T02:00:00Z"
 cover: /images/journal/journal-02-cover.jpg
 excerpt: 这次柴烧持续了三天三夜，记录一下过程和心得。
 status: published
-createdAt: "2026-02-25T00:00:00.000Z"
-updatedAt: "2026-02-25T00:00:00.000Z"
 ---
 
 ## 装窑
@@ -19,4 +19,4 @@ updatedAt: "2026-02-25T00:00:00.000Z"
 
 ## 保温与冷却
 
-最高温达到 1280 度，保温 4 小时。然后自然冷却三天再开窑。
+最高温达到1280度，保温4小时。然后自然冷却三天再开窑。

@@ -25,10 +25,10 @@ const { data: journalsData, refresh } = await useAsyncData('admin-journal', () =
   default: () => ({ items: [] as Journal[], total: 0, page: 1, limit: 10 })
 })
 
-async function handleDelete(id: number) {
+async function handleDelete(slug: string) {
   if (!confirm('确定要删除这篇日志吗？')) return
   try {
-    await $fetch(`/api/admin/journal/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/admin/journal/${slug}`, { method: 'DELETE' })
     await refresh()
   } catch (e) {
     alert('删除失败')
@@ -37,7 +37,7 @@ async function handleDelete(id: number) {
 
 function toggleStatus(journal: Journal) {
   const newStatus = journal.status === 'published' ? 'draft' : 'published'
-  $fetch(`/api/admin/journal/${journal.id}`, {
+  $fetch(`/api/admin/journal/${journal.slug}`, {
     method: 'PUT',
     body: { status: newStatus }
   }).then(() => refresh())
@@ -85,9 +85,9 @@ useHead({
             </tr>
           </thead>
           <tbody>
-            <tr v-for="journal in journalsData.items" :key="journal.id">
+            <tr v-for="journal in journalsData.items" :key="journal.slug">
               <td class="title-cell">
-                <NuxtLink :to="`/admin/journal/${journal.id}`" class="journal-title">
+                <NuxtLink :to="`/admin/journal/${journal.slug}`" class="journal-title">
                   {{ journal.title }}
                 </NuxtLink>
               </td>
@@ -101,8 +101,8 @@ useHead({
               </td>
               <td>
                 <div class="actions">
-                  <NuxtLink :to="`/admin/journal/${journal.id}`" class="action-link">编辑</NuxtLink>
-                  <button class="action-link delete" @click="handleDelete(journal.id)">删除</button>
+                  <NuxtLink :to="`/admin/journal/${journal.slug}`" class="action-link">编辑</NuxtLink>
+                  <button class="action-link delete" @click="handleDelete(journal.slug)">删除</button>
                 </div>
               </td>
             </tr>

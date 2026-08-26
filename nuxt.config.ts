@@ -33,13 +33,14 @@ export default defineNuxtConfig({
     }
   },
   routeRules: {
-    // 前台走 Nuxt Content SQLite dump + 客户端 WASM，纯静态也能工作
-    '/': { prerender: true },
-    '/works': { prerender: true },
-    '/works/**': { prerender: true },
-    '/journal': { prerender: true },
-    '/journal/**': { prerender: true },
-    '/about': { prerender: true },
+    // 前台：SSR + SWR 60s
+    // 不是 prerender（prerender 会冻结构建时数据快照，后台改内容 rebuild 后 SWR 1 分钟内刷新）
+    '/': { ssr: true, swr: 60 },
+    '/works': { ssr: true, swr: 60 },
+    '/works/**': { ssr: true, swr: 60 },
+    '/journal': { ssr: true, swr: 60 },
+    '/journal/**': { ssr: true, swr: 60 },
+    '/about': { ssr: true, swr: 60 },
     // 后台：纯客户端渲染（CSR），避免 SSR cookie 转发的竞态问题
     '/admin/**': { ssr: false }
   },

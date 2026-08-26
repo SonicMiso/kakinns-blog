@@ -5,7 +5,7 @@ definePageMeta({
   layout: false
 })
 
-const {} = useAuth()
+const { checkAuth } = useAuth()
 
 const form = ref({
   title: '',
@@ -37,7 +37,7 @@ async function handleCreate() {
       body: form.value
     })
     alert('创建成功')
-    await navigateTo(`/admin/journal/${journal.id}`)
+    await navigateTo(`/admin/journal/${journal.slug}`)
   } catch (e) {
     alert('创建失败')
   } finally {
