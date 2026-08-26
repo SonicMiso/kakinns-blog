@@ -15,6 +15,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+
+      - name: Enable corepack (pnpm)
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.24.0 --activate
+        env:
+          # pnpm 11 起使用 PNPM_CONFIG_ 前缀（不再读取 NPM_CONFIG_*）
+          PNPM_CONFIG_REGISTRY: https://registry.npmjs.org
+
+      # - name: Install dependencies & typecheck（可选，加快发现类型错误）
+      #   run: pnpm install --frozen-lockfile && pnpm run build
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

@@ -13,11 +13,51 @@ if (!journal.value) {
   throw createError({ statusCode: 404, statusMessage: '日志不存在' })
 }
 
+// Nuxt Content v3 queryCollection returns body as minimark format:
+// { type: "minimark", value: [["h2", {id:...}, "标题"], ["p", {}, "段落"], ...] }
+// 转成纯文本段落，兼容模板的 split('\n\n') + heading 匹配逻辑
+function extractBodyText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (!value || typeof value !== 'object') return ''
+  const v = value as any
+  if (typeof v.raw === 'string') return v.raw
+  if (typeof v.markdown === 'string') return v.markdown
+  if (v.type === 'minimark' && Array.isArray(v.value)) {
+    const blocks: string[] = []
+    const extractText = (children: any[]): string => {
+      const parts: string[] = []
+      for (const child of children) {
+        if (typeof child === 'string') parts.push(child)
+        else if (Array.isArray(child)) parts.push(extractText(child.slice(2)))
+      }
+      return parts.join('')
+    }
+    for (const node of v.value) {
+      if (!Array.isArray(node)) continue
+      const tag = node[0] as string
+      const text = extractText(node.slice(2))
+      if (tag.startsWith('h')) {
+        const level = parseInt(tag.slice(1), 10) || 2
+        blocks.push('#'.repeat(level) + ' ' + text)
+      } else if (tag === 'ol' || tag === 'ul') {
+        node.slice(2).filter(Array.isArray).forEach((li: any, i: number) => {
+          blocks.push((tag === 'ol' ? `${i + 1}. ` : '- ') + extractText(li.slice(2)))
+        })
+      } else {
+        blocks.push(text)
+      }
+    }
+    return blocks.join('\n\n')
+  }
+  return ''
+}
+
 // 正文：Nuxt Content type=page 集合会把 markdown 正文放 body 字段；我们自己原格式用 content。做个兼容。
 const journalBody = computed(() => {
   const j = journal.value as any
   if (!j) return ''
-  return j.content || j.body || ''
+  const raw = (j.content !== undefined && j.content !== '' ? j.content : null) ?? j.body ?? ''
+  return extractBodyText(raw)
 })
 
 useHead(() => ({

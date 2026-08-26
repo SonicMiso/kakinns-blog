@@ -1,8 +1,7 @@
 ---
-id: 2
 title: 手工陶瓷茶杯
 slug: ceramic-cup-01
-date: 2026-02-20
+date: "2026-02-20"
 category: ceramics
 cover: /images/works/ceramic-cup-01-cover.jpg
 excerpt: 拉坯成型的手工茶杯，柴烧釉色，每件都有独特的纹理与质感。

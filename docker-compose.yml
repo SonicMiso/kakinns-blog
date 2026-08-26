@@ -3,9 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      # 国内构建加速：淘宝 npm 源（可在服务器 .env 里再覆盖）
+      # 国内构建加速：npmmirror（淘宝源）。可在服务器 .env 里覆盖。
       args:
-        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+        PNPM_REGISTRY: ${NPM_REGISTRY:-${PNPM_REGISTRY:-https://registry.npmmirror.com}}
     image: kakins-blog:latest
     container_name: kakins-blog
     restart: unless-stopped

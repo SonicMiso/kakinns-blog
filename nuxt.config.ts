@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   content: {
     experimental: {
       // 使用 Node.js 22.5+ 内置原生 SQLite，跳过 better-sqlite3 原生编译
+      // NOTE: 依赖升级（如 pnpm 11）后 better-sqlite3 需重编译，原生方案更稳定
       // 参见 https://content.nuxt.com/docs/getting-started/configuration#experimentalsqliteconnector
       sqliteConnector: 'native'
     },

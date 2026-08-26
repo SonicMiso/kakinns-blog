@@ -7,11 +7,15 @@ definePageMeta({
 
 const { isAuthenticated, isLoading, checkAuth } = useAuth()
 
-const { data: worksStats } = await useFetch('/api/admin/works?limit=5', {
+const { data: worksStats } = await useFetch('/api/admin/works', {
+  query: { limit: 5 },
+  headers: useRequestHeaders(['cookie']) as Record<string, string>,
   default: () => ({ items: [] as Work[], total: 0 })
 })
 
-const { data: journalStats } = await useFetch('/api/admin/journal?limit=5', {
+const { data: journalStats } = await useFetch('/api/admin/journal', {
+  query: { limit: 5 },
+  headers: useRequestHeaders(['cookie']) as Record<string, string>,
   default: () => ({ items: [] as Journal[], total: 0 })
 })
 

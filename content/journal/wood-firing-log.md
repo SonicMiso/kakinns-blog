@@ -1,13 +1,12 @@
 ---
-id: 2
 title: 柴窑烧成记录
 slug: wood-firing-log
-date: 2026-02-25
+date: "2026-02-25"
 cover: /images/journal/journal-02-cover.jpg
 excerpt: 这次柴烧持续了三天三夜，记录一下过程和心得。
 status: published
-createdAt: 2026-02-25T00:00:00.000Z
-updatedAt: 2026-02-25T00:00:00.000Z
+createdAt: "2026-02-25T00:00:00.000Z"
+updatedAt: "2026-02-25T00:00:00.000Z"
 ---
 
 ## 装窑

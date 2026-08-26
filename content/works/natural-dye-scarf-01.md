@@ -1,8 +1,7 @@
 ---
-id: 3
 title: 植物染围巾
 slug: natural-dye-scarf-01
-date: 2026-01-10
+date: "2026-01-10"
 category: textile
 cover: /images/works/dye-scarf-01-cover.jpg
 excerpt: 使用板蓝根与栀子果实进行植物染色，蚕丝围巾的柔和色彩。

@@ -1,8 +1,7 @@
 ---
-id: 1
 title: 胡桃木收纳盒
 slug: walnut-box-01
-date: 2026-03-15
+date: "2026-03-15"
 category: wood
 cover: /images/works/walnut-box-01-cover.jpg
 excerpt: 一件用北美黑胡桃制作的桌面收纳盒，采用榫卯结构，表面涂抹天然木蜡油。

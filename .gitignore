@@ -9,6 +9,9 @@ dist
 # Node dependencies
 node_modules
 
+# pnpm 本地 store（CI 用远程 cache，团队不提交）
+.pnpm-store
+
 # Logs
 logs
 *.log
@@ -22,6 +25,9 @@ logs
 .env
 .env.*
 !.env.example
+
+# npm 遗留（已迁移到 pnpm）
+package-lock.json
 
 # 旧数据目录（已迁移到 content/，不再需要）
 /server/data/*.json

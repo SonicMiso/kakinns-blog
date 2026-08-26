@@ -1,13 +1,12 @@
 ---
-id: 1
 title: 关于木作的一些思考
 slug: thoughts-on-woodworking
-date: 2026-03-20
+date: "2026-03-20"
 cover: /images/journal/journal-01-cover.jpg
 excerpt: 做木作三年了，想记录一些关于材料、工具和时间的思考。
 status: published
-createdAt: 2026-03-20T00:00:00.000Z
-updatedAt: 2026-03-20T00:00:00.000Z
+createdAt: "2026-03-20T00:00:00.000Z"
+updatedAt: "2026-03-20T00:00:00.000Z"
 ---
 
 ## 关于材料

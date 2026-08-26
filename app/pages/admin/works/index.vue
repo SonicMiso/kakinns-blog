@@ -12,15 +12,18 @@ const page = ref(1)
 const limit = ref(10)
 const statusFilter = ref<string>('')
 
-const { data: worksData, refresh } = await useAsyncData('admin-works', () => 
-  $fetch('/api/admin/works', {
+const { data: worksData, refresh } = await useAsyncData('admin-works', () => {
+  // SSR 时 $fetch 不会自动携带浏览器 cookie，需要手动转发给 admin API（auth middleware 依赖它）
+  const headers = useRequestHeaders(['cookie'])
+  return $fetch('/api/admin/works', {
+    headers: headers.cookie ? { cookie: headers.cookie } : undefined,
     query: {
       page: page.value,
       limit: limit.value,
       ...(statusFilter.value ? { status: statusFilter.value } : {})
     }
   })
-, {
+}, {
   default: () => ({ items: [] as Work[], total: 0, page: 1, limit: 10 })
 })
 
