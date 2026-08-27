@@ -135,6 +135,7 @@ function onCoverError(event: Event) {
 .work-cover { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: var(--space-12); background: var(--color-surface); }
 .cover-media { display: block; width: 100%; height: 100%; object-fit: cover; }
 .cover-placeholder { position: absolute; inset: 0; background: linear-gradient(135deg, var(--color-surface-alt) 0%, #DDE0DF 50%, var(--color-surface-alt) 100%); display: flex; align-items: center; justify-content: center; }
+.cover-placeholder[hidden] { display: none; }
 .cover-title { font-family: var(--font-serif); font-size: 2rem; color: var(--color-text-muted); opacity: 0.4; }
 .work-info { border-top: 1px solid var(--color-border-light); border-bottom: 1px solid var(--color-border-light); padding: var(--space-8) 0; margin-bottom: var(--space-12); }
 .info-row { display: flex; gap: var(--space-12); flex-wrap: wrap; }

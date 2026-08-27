@@ -1,4 +1,12 @@
 <script setup lang="ts">
+const studioCover = 'https://images.pexels.com/photos/4226806/pexels-photo-4226806.jpeg?auto=compress&cs=tinysrgb&w=1600'
+
+function onStudioCoverError(event: Event) {
+  const image = event.target as HTMLImageElement
+  image.style.display = 'none'
+  image.nextElementSibling?.removeAttribute('hidden')
+}
+
 useHead({
   title: '关于 — Kakin Studio'
 })
@@ -15,7 +23,15 @@ useHead({
 
         <section class="about-content section">
           <div class="about-image-hero">
-            <div class="image-placeholder">
+            <img
+              :src="studioCover"
+              alt="工作室空间"
+              class="studio-cover-media"
+              loading="lazy"
+              decoding="async"
+              @error="onStudioCoverError"
+            />
+            <div class="image-placeholder" aria-hidden="true" hidden>
               <span class="placeholder-text">工作室空间</span>
             </div>
           </div>
@@ -90,20 +106,35 @@ useHead({
 }
 
 .about-image-hero {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: var(--space-12);
+  background: var(--color-surface-alt);
+}
+
+.studio-cover-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .image-placeholder {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, var(--color-surface-alt) 0%, #DDE0DF 50%, var(--color-surface-alt) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.image-placeholder[hidden] {
+  display: none;
 }
 
 .placeholder-text {

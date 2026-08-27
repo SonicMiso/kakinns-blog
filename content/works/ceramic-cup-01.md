@@ -5,11 +5,13 @@ date: "2026-02-20"
 createdAt: "2026-02-20T02:00:00Z"
 updatedAt: "2026-02-20T02:00:00Z"
 category: ceramics
-cover: /images/works/ceramic-cup-01-cover.jpg
+cover: "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=1600"
 excerpt: 拉坯成型的手工茶杯，柴烧釉色，每件都有独特的纹理与质感。
 materials: ["陶土", "柴烧釉"]
 tools: ["拉坯机", "修坯刀", "窑炉"]
-gallery: ["/images/works/ceramic-cup-01-01.jpg", "/images/works/ceramic-cup-01-02.jpg"]
+gallery:
+  - "https://images.pexels.com/photos/3094215/pexels-photo-3094215.jpeg?auto=compress&cs=tinysrgb&w=1600"
+  - "https://images.pexels.com/photos/2079249/pexels-photo-2079249.jpeg?auto=compress&cs=tinysrgb&w=1600"
 featured: true
 status: published
 ---

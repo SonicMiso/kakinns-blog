@@ -12,6 +12,11 @@ const journals = await queryCollection('journal')
   .limit(2)
   .all()
 
+const heroMainImage = works[0]?.cover || ''
+const studioCornerImage =
+  journals.find(item => item.cover)?.cover ||
+  'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg?auto=compress&cs=tinysrgb&w=1600'
+
 useHead({
   title: 'Kakin Studio — 手工艺个人工作室'
 })
@@ -38,12 +43,28 @@ useHead({
           </div>
           <div class="hero-visual">
             <div class="hero-image hero-image-main">
-              <div class="image-placeholder">
+              <img
+                v-if="heroMainImage"
+                :src="heroMainImage"
+                alt="精选作品"
+                class="hero-image-media"
+                loading="lazy"
+                decoding="async"
+              />
+              <div v-else class="image-placeholder">
                 <span class="placeholder-label">精选作品</span>
               </div>
             </div>
             <div class="hero-image hero-image-sub">
-              <div class="image-placeholder">
+              <img
+                v-if="studioCornerImage"
+                :src="studioCornerImage"
+                alt="工作室一角"
+                class="hero-image-media"
+                loading="lazy"
+                decoding="async"
+              />
+              <div v-else class="image-placeholder">
                 <span class="placeholder-label small">工作室一角</span>
               </div>
             </div>
@@ -95,6 +116,123 @@ useHead({
 </template>
 
 <style scoped>
+.hero {
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-20);
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.hero-eyebrow {
+  margin-bottom: var(--space-4);
+}
+
+.hero-title {
+  margin-bottom: var(--space-6);
+}
+
+.hero-desc {
+  font-size: 1.05rem;
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+  max-width: 420px;
+  margin-bottom: var(--space-8);
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--space-5);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-6);
+  font-size: 0.9rem;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  min-height: 44px;
+}
+
+.btn-primary {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.btn-primary:hover {
+  background: var(--color-accent);
+  color: white;
+}
+
+.btn-ghost {
+  color: var(--color-text-secondary);
+  padding: var(--space-3) 0;
+}
+
+.btn-ghost:hover {
+  color: var(--color-accent);
+}
+
+.hero-visual {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+.hero-image {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.hero-image-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-image-main {
+  aspect-ratio: 4 / 5;
+}
+
+.hero-image-sub {
+  position: absolute;
+  bottom: -2rem;
+  left: -2rem;
+  width: 45%;
+  aspect-ratio: 1;
+  border: 4px solid var(--color-bg);
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--color-surface-alt) 0%, #E2E5E4 50%, var(--color-surface-alt) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.placeholder-label {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
+.placeholder-label.small {
+  font-size: 0.9rem;
+}
+
 .section-alt { background: var(--color-surface-alt); }
 .section-head {
   display: flex;
@@ -125,6 +263,23 @@ useHead({
   .featured-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-8); }
 }
 @media (max-width: 768px) {
+  .hero {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-16);
+  }
+  .hero-inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-10);
+  }
+  .hero-visual {
+    order: -1;
+  }
+  .hero-image-sub {
+    display: none;
+  }
+  .hero-desc {
+    font-size: 1rem;
+  }
   .featured-grid { grid-template-columns: 1fr; }
   .section-head { align-items: flex-start; }
 }

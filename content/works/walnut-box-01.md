@@ -5,13 +5,13 @@ date: "2026-03-15"
 createdAt: "2026-03-15T02:00:00Z"
 updatedAt: "2026-08-28T00:10:00Z"
 category: "wood"
-cover: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Wooden_Box.jpg"
+cover: "https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1600"
 excerpt: "以北美黑胡桃木制作的小型收纳盒，利用自然纹理和简洁榫接表达温润的手工质感。"
 materials: ["北美黑胡桃木", "天然木蜡油"]
 tools: ["台锯", "带锯", "砂光机", "凿子"]
 gallery:
-  - "https://commons.wikimedia.org/wiki/Special:Redirect/file/Wooden_Box.jpg"
-  - "https://commons.wikimedia.org/wiki/Special:Redirect/file/Home_made_wooden_box_with_tools.jpg"
+  - "https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1600"
+  - "https://images.pexels.com/photos/699588/pexels-photo-699588.jpeg?auto=compress&cs=tinysrgb&w=1600"
 featured: true
 status: "published"
 ---
