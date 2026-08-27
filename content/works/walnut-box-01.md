@@ -11,7 +11,7 @@ tools: ["台锯","带锯","砂光机","凿子"]
 gallery: ["/images/works/walnut-box-01-01.jpg","/images/works/walnut-box-01-02.jpg","/images/works/walnut-box-01-03.jpg"]
 featured: true
 status: "published"
-updatedAt: "2026-08-27T01:18:38.539Z"
+updatedAt: "2026-08-27T11:34:30.371Z"
 ---
 
 ## 设计与选材
@@ -28,3 +28,4 @@ updatedAt: "2026-08-27T01:18:38.539Z"
 ## 主站同步验证段落（胡桃木）
 
 这个段落仅用于确认主站 SSR/SWR 能在后台保存后把最新正文渲染出来。
+
