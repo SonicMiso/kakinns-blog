@@ -90,9 +90,10 @@ jobs:
           port: ${{ env.DEPLOY_PORT }}
           script: |
             set -e
-            cd "${DEPLOY_PATH}"
-            docker load -i "${DEPLOY_PATH}/${IMAGE_NAME}-prod.tar"
-            IMAGE_TAG="prod-${{ github.sha }}" docker compose up -d --force-recreate
+            cd "${{ env.DEPLOY_PATH }}"
+            docker load -i "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar"
+            docker tag "${{ env.IMAGE_NAME }}:prod-${{ github.sha }}" "${{ env.IMAGE_NAME }}:latest"
+            docker compose up -d --force-recreate
             sleep 3
             docker compose ps
             CODE="000"
@@ -121,7 +122,7 @@ jobs:
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
           script: |
-            rm -f "${DEPLOY_PATH}/${IMAGE_NAME}-prod.tar"
+            rm -f "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar"
 
       - name: Login to GHCR fallback
         if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
