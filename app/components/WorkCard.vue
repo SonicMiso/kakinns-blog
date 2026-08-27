@@ -10,6 +10,7 @@ defineProps<Props>()
 </script>
 
 <template>
+  <!-- slug = 文件名（不含扩展名），详情页路由 /works/<slug> -->
   <NuxtLink :to="`/works/${work.slug}`" class="work-card">
     <div class="card-image">
       <div class="image-placeholder">

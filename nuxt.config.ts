@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   content: {
     experimental: {
       // 使用 Node.js 22.5+ 内置原生 SQLite，跳过 better-sqlite3 原生编译
+      // NOTE: 依赖升级（如 pnpm 11）后 better-sqlite3 需重编译，原生方案更稳定
       // 参见 https://content.nuxt.com/docs/getting-started/configuration#experimentalsqliteconnector
       sqliteConnector: 'native'
     },
@@ -32,19 +33,20 @@ export default defineNuxtConfig({
     }
   },
   routeRules: {
-    // 前台走 Nuxt Content SQLite dump + 客户端 WASM，纯静态也能工作
-    '/': { prerender: true },
-    '/works': { prerender: true },
-    '/works/**': { prerender: true },
-    '/journal': { prerender: true },
-    '/journal/**': { prerender: true },
-    '/about': { prerender: true },
-    // 后台：SSR（实时调 GitHub API 提交 commit）
-    '/admin/**': { ssr: true }
+    // 前台：SSR + SWR 60s
+    // 不是 prerender（prerender 会冻结构建时数据快照，后台改内容 rebuild 后 SWR 1 分钟内刷新）
+    '/': { ssr: true, swr: 60 },
+    '/works': { ssr: true, swr: 60 },
+    '/works/**': { ssr: true, swr: 60 },
+    '/journal': { ssr: true, swr: 60 },
+    '/journal/**': { ssr: true, swr: 60 },
+    '/about': { ssr: true, swr: 60 },
+    // 后台：纯客户端渲染（CSR），避免 SSR cookie 转发的竞态问题
+    '/admin/**': { ssr: false }
   },
   runtimeConfig: {
     adminUsername: process.env.ADMIN_USERNAME || 'admin',
-    adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+    adminPassword: process.env.ADMIN_PASSWORD || 'admin',
     sessionSecret: process.env.SESSION_SECRET || 'kakin-studio-secret-key-please-change',
     // GitHub 凭据：后台写内容时通过 octokit 把变更 commit 到仓库，触发 CI 重建
     github: {
@@ -53,7 +55,11 @@ export default defineNuxtConfig({
       repo: process.env.GITHUB_REPO || '',
       branch: process.env.GITHUB_BRANCH || 'main',
       committerName: process.env.GITHUB_COMMITTER_NAME || 'Kakin Studio Bot',
-      committerEmail: process.env.GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio'
+      committerEmail: process.env.GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio',
+      // 国内服务器：https://api.github.com 常被墙/超时，填反向代理地址
+      // 示例1（公开 ghproxy）：https://ghproxy.com/https://api.github.com
+      // 示例2（自建 fastgithub）：https://gh.yourdomain.com/api
+      baseUrl: process.env.GITHUB_API_BASE || ''
     },
     public: {
       siteName: 'Kakin Studio',

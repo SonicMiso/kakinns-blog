@@ -8,7 +8,10 @@ definePageMeta({
 
 const { checkAuth } = useAuth()
 const route = useRoute()
-const id = parseInt(route.params.id as string)
+// 路由文件还是 [id]，语义已是 slug 字符串
+const slug = route.params.id as string
+
+const timestamps = ref({ createdAt: '', updatedAt: '' })
 
 const form = ref({
   title: '',
@@ -27,7 +30,11 @@ onMounted(async () => {
   await checkAuth()
   loading.value = true
   try {
-    const journal = (await $fetch<any>(`/api/admin/journal/${id}`)) as Journal & Record<string, any>
+    const journal = (await $fetch<any>(`/api/admin/journal/${slug}`)) as Journal & Record<string, any>
+    timestamps.value = {
+      createdAt: journal.createdAt || '',
+      updatedAt: journal.updatedAt || ''
+    }
     form.value = {
       title: journal.title,
       slug: journal.slug,
@@ -58,10 +65,11 @@ async function handleSave() {
   }
   saving.value = true
   try {
-    await $fetch(`/api/admin/journal/${id}`, {
+    await $fetch(`/api/admin/journal/${slug}`, {
       method: 'PUT',
       body: form.value
     })
+    timestamps.value.updatedAt = new Date().toISOString()
     alert('保存成功')
   } catch (e) {
     alert('保存失败')
@@ -73,7 +81,7 @@ async function handleSave() {
 async function handleDelete() {
   if (!confirm('确定要删除这篇日志吗？')) return
   try {
-    await $fetch(`/api/admin/journal/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/admin/journal/${slug}`, { method: 'DELETE' })
     await navigateTo('/admin/journal')
   } catch (e) {
     alert('删除失败')
@@ -144,6 +152,16 @@ useHead({
               <option value="draft">草稿</option>
               <option value="published">已发布</option>
             </select>
+          </div>
+
+          <div class="form-group">
+            <label>创建时间（后端自动）</label>
+            <input :value="timestamps.createdAt" type="text" disabled class="readonly-input" />
+          </div>
+
+          <div class="form-group">
+            <label>更新时间（后端自动）</label>
+            <input :value="timestamps.updatedAt" type="text" disabled class="readonly-input" />
           </div>
         </div>
       </div>
@@ -279,6 +297,14 @@ useHead({
   text-align: center;
   padding: var(--space-16);
   color: var(--color-text-muted);
+}
+
+.readonly-input {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
 }
 
 @media (max-width: 768px) {

@@ -1,0 +1,46 @@
+# ========== pnpm 11 工作区配置 ==========
+# pnpm 11 起：除 registry/auth 外的所有配置均在此文件或全局 config.yaml 中
+# 不再读取 .npmrc 中的非 auth 配置，也不再读取 package.json 的 pnpm 字段
+# 迁移指南：https://pnpm.io/11.x/migration
+
+# ---------- Workspace 包集合（必填，即使非 monorepo 也要声明为空数组）----------
+# 本项目是单包（非 monorepo），此处显式声明 packages 为空，避免
+#   ERR_PNPM_INVALID_WORKSPACE_CONFIGURATION packages field missing or empty
+packages: []
+
+# ---------- 构建脚本批准（allowBuilds 替代 v10 的 onlyBuiltDependencies）----------
+# 安全默认：除明确列 true 的包外，其他包的 postinstall/build 脚本均不执行
+# true = 允许运行构建脚本，false = 显式禁止，未列出 = 使用默认（禁止并在 CI 中报错）
+allowBuilds:
+  # esbuild 需要下载对应平台的原生二进制
+  esbuild: true
+  # vue-demi：兼容 Vue 2/3 的 postinstall
+  vue-demi: true
+  # @node-rs/* 系列：Rust 原生模块
+  "@node-rs/*": true
+  # better-sqlite3：原生 C++ 编译（如果用到）
+  better-sqlite3: true
+
+# ---------- 依赖提升策略 ----------
+# Nuxt / Vue 生态需要单实例，开启全盘提升（等价于旧版 shamefully-hoist=true）
+shamefullyHoist: true
+# peer 依赖版本不合时不抛错，Nuxt peer 比较宽松
+strictPeerDependencies: false
+
+# ---------- 安装行为 ----------
+# 优先使用本地 store 缓存，减少网络请求（国内 CI / 服务器友好）
+preferOffline: true
+# 当本地 pnpm 版本与 packageManager 字段不一致时的行为：
+#   error = 严格报错，warn = 警告但继续，ignore = 不校验，download = 自动下载匹配版本（默认）
+# 此处放宽为 warn，降低团队成员本地 pnpm 版本略有差异时的升级摩擦
+pmOnFail: warn
+
+# ---------- pnpm store 路径 ----------
+# 默认会放到用户目录；若在受限环境可改为项目相对路径
+# storeDir: ./.pnpm-store
+
+# ---------- 供应链安全（pnpm 11 默认更严格，按需调松）----------
+# 新包发布后默认 1440 分钟（1 天）内不解析；如需实时安装依赖改为 0
+# minimumReleaseAge: 0
+# 是否禁止非常规来源的 subdeps（git URL / 本地路径 / http tarball 等）
+# blockExoticSubdeps: true

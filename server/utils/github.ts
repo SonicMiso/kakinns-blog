@@ -1,4 +1,8 @@
 import { Octokit } from 'octokit'
+import { Buffer } from 'node:buffer'
+import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs'
+import path from 'node:path'
+
 
 interface CommitFile {
   path: string
@@ -8,6 +12,21 @@ interface CommitFile {
 
 interface DeleteFile {
   path: string
+}
+
+function getOctokit() {
+  const { github } = useRuntimeConfig() as any
+  // 国内服务器访问 api.github.com 会卡顿/超时：支持通过自建代理或 ghproxy 反代
+  // 在 nuxt.config runtimeConfig.github 或 .env GITHUB_API_BASE 里填入，例如：
+  //   https://ghproxy.com/https://api.github.com   （公开代理，免费但可能限流）
+  //   https://你的自建fastgithub域名/api            （自建 fastgithub/mirrorkhanh 反代）
+  const baseUrl = github.baseUrl || process.env.GITHUB_API_BASE || undefined
+  return new Octokit({
+    auth: github.token,
+    baseUrl,
+    // 国内链路稳定性：放宽超时 + 重试
+    request: { fetch: undefined, timeout: 30_000 }
+  })
 }
 
 function assertConfig() {
@@ -35,18 +54,14 @@ function isConfigured() {
  * 本地写入 content/ 目录（dev 环境或 GitHub 未配置时使用，让后台保存立即能反映）
  */
 function writeLocalFile(relativePath: string, content: string) {
-  const fs = require('node:fs') as typeof import('node:fs')
-  const path = require('node:path') as typeof import('node:path')
   const full = path.resolve(process.cwd(), relativePath)
-  fs.mkdirSync(path.dirname(full), { recursive: true })
-  fs.writeFileSync(full, content, 'utf-8')
+  mkdirSync(path.dirname(full), { recursive: true })
+  writeFileSync(full, content, 'utf-8')
 }
 
 function deleteLocalFile(relativePath: string) {
-  const fs = require('node:fs') as typeof import('node:fs')
-  const path = require('node:path') as typeof import('node:path')
   const full = path.resolve(process.cwd(), relativePath)
-  if (fs.existsSync(full)) fs.unlinkSync(full)
+  if (existsSync(full)) unlinkSync(full)
 }
 
 /**
@@ -67,7 +82,7 @@ export async function commitContentChanges(params: {
   }
 
   const cfg = assertConfig()
-  const octokit = new Octokit({ auth: cfg.token })
+  const octokit = getOctokit()
   const owner = cfg.owner
   const repo = cfg.repo
   const branch = cfg.branch

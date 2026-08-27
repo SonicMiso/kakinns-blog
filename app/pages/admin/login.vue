@@ -76,7 +76,7 @@ useHead({
       </form>
 
       <div class="login-hint">
-        <p>默认账号：admin / admin123</p>
+        <p>默认账号：admin / admin</p>
       </div>
     </div>
   </div>

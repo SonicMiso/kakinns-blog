@@ -10,6 +10,7 @@ defineProps<Props>()
 </script>
 
 <template>
+  <!-- slug = 文件名（不含扩展名），详情页路由 /journal/<slug> -->
   <NuxtLink :to="`/journal/${journal.slug}`" class="journal-card">
     <div class="card-content">
       <div class="card-date">{{ formatDate(journal.date) }}</div>

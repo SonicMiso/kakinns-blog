@@ -3,15 +3,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # 国内构建加速：npmmirror（淘宝源）。可在服务器 .env 里覆盖。
+      args:
+        PNPM_REGISTRY: ${NPM_REGISTRY:-${PNPM_REGISTRY:-https://registry.npmmirror.com}}
     image: kakins-blog:latest
     container_name: kakins-blog
     restart: unless-stopped
     ports:
+      # 对外暴露公网：适合直接访问 http://<服务器IP>:3000
+      # 如果前面套 Nginx（推荐，可 HTTPS/缓存），改回只绑回环：- "127.0.0.1:3000:3000"
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       - SESSION_SECRET=${SESSION_SECRET:-please-change-this}
       # 后台写内容时 commit 回 GitHub（Git-based CMS 核心凭据）
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
@@ -20,10 +25,23 @@ services:
       - GITHUB_BRANCH=${GITHUB_BRANCH:-main}
       - GITHUB_COMMITTER_NAME=${GITHUB_COMMITTER_NAME:-Kakin Studio Bot}
       - GITHUB_COMMITTER_EMAIL=${GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}
-    # 内容完全来自 Git + 构建 SQLite dump，不再需要数据卷。
-    # sessions 已改为签名 cookie，无服务端状态。
+      # 国内服务器 GitHub API 反代，留空走官方；推荐填下面两种之一
+      #   公开 ghproxy：https://ghproxy.com/https://api.github.com
+      #   自建 fastgithub：https://<你的fastgithub域名>/api
+      - GITHUB_API_BASE=${GITHUB_API_BASE:-}
+      # 容器内 apk/npm 也走代理（如果你在服务器搭了 clash/v2raya，填 http://宿主机IP:7890）
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - NO_PROXY=localhost,127.0.0.1,.aliyuncs.com
+    dns:
+      # 国内服务器默认 DNS 慢/污染，直接用阿里 + 114
+      - 223.5.5.5
+      - 114.114.114.114
+      - 8.8.8.8
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      # compose 里的 healthcheck 会覆盖 Dockerfile，注意用 Node 26 内置 fetch（alpine 没 wget）
+      # exec form 需要 shell 解析才能传 JS 字符串，所以用 CMD-SHELL
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 30s
       timeout: 5s
       retries: 3

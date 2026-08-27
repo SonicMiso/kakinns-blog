@@ -5,18 +5,18 @@ definePageMeta({
   layout: false
 })
 
-const { isAuthenticated, isLoading, checkAuth } = useAuth()
+const { isAuthenticated, isLoading } = useAuth()
 
-const { data: worksStats } = await useFetch('/api/admin/works?limit=5', {
+// 路由层 auth.global.ts 已保证进入此页一定已登录
+// admin = ssr:false，纯 CSR，$fetch 自动带浏览器 cookie，无需 useRequestHeaders
+const { data: worksStats } = await useFetch('/api/admin/works', {
+  query: { limit: 5 },
   default: () => ({ items: [] as Work[], total: 0 })
 })
 
-const { data: journalStats } = await useFetch('/api/admin/journal?limit=5', {
+const { data: journalStats } = await useFetch('/api/admin/journal', {
+  query: { limit: 5 },
   default: () => ({ items: [] as Journal[], total: 0 })
-})
-
-onMounted(() => {
-  checkAuth()
 })
 
 useHead({
@@ -50,7 +50,7 @@ useHead({
             <NuxtLink to="/admin/works" class="section-link">全部 →</NuxtLink>
           </div>
           <div class="recent-list">
-            <div v-for="work in worksStats.items.slice(0, 5)" :key="work.id" class="recent-item">
+            <div v-for="work in worksStats.items.slice(0, 5)" :key="work.slug" class="recent-item">
               <div class="item-info">
                 <span class="item-title">{{ work.title }}</span>
                 <span class="item-meta">
@@ -59,7 +59,7 @@ useHead({
                   </span>
                 </span>
               </div>
-              <NuxtLink :to="`/admin/works/${work.id}`" class="item-action">编辑</NuxtLink>
+              <NuxtLink :to="`/admin/works/${work.slug}`" class="item-action">编辑</NuxtLink>
             </div>
           </div>
         </div>
@@ -70,7 +70,7 @@ useHead({
             <NuxtLink to="/admin/journal" class="section-link">全部 →</NuxtLink>
           </div>
           <div class="recent-list">
-            <div v-for="journal in journalStats.items.slice(0, 5)" :key="journal.id" class="recent-item">
+            <div v-for="journal in journalStats.items.slice(0, 5)" :key="journal.slug" class="recent-item">
               <div class="item-info">
                 <span class="item-title">{{ journal.title }}</span>
                 <span class="item-meta">
@@ -79,7 +79,7 @@ useHead({
                   </span>
                 </span>
               </div>
-              <NuxtLink :to="`/admin/journal/${journal.id}`" class="item-action">编辑</NuxtLink>
+              <NuxtLink :to="`/admin/journal/${journal.slug}`" class="item-action">编辑</NuxtLink>
             </div>
           </div>
         </div>

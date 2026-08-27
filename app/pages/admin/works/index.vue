@@ -6,28 +6,29 @@ definePageMeta({
   layout: false
 })
 
-const { isAuthenticated, isLoading, checkAuth } = useAuth()
+const { isAuthenticated, isLoading } = useAuth()
 
 const page = ref(1)
 const limit = ref(10)
 const statusFilter = ref<string>('')
 
-const { data: worksData, refresh } = await useAsyncData('admin-works', () => 
-  $fetch('/api/admin/works', {
+// admin = ssr:false，纯 CSR，$fetch 自动带浏览器 cookie，无需 useRequestHeaders
+const { data: worksData, refresh } = await useAsyncData('admin-works', () => {
+  return $fetch('/api/admin/works', {
     query: {
       page: page.value,
       limit: limit.value,
       ...(statusFilter.value ? { status: statusFilter.value } : {})
     }
   })
-, {
+}, {
   default: () => ({ items: [] as Work[], total: 0, page: 1, limit: 10 })
 })
 
-async function handleDelete(id: number) {
+async function handleDelete(slug: string) {
   if (!confirm('确定要删除这个作品吗？')) return
   try {
-    await $fetch(`/api/admin/works/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/admin/works/${slug}`, { method: 'DELETE' })
     await refresh()
   } catch (e) {
     alert('删除失败')
@@ -36,7 +37,7 @@ async function handleDelete(id: number) {
 
 function toggleStatus(work: Work) {
   const newStatus = work.status === 'published' ? 'draft' : 'published'
-  $fetch(`/api/admin/works/${work.id}`, {
+  $fetch(`/api/admin/works/${work.slug}`, {
     method: 'PUT',
     body: { status: newStatus }
   }).then(() => refresh())
@@ -44,10 +45,6 @@ function toggleStatus(work: Work) {
 
 watch([page, statusFilter], () => {
   refresh()
-})
-
-onMounted(() => {
-  checkAuth()
 })
 
 useHead({
@@ -90,9 +87,9 @@ useHead({
             </tr>
           </thead>
           <tbody>
-            <tr v-for="work in worksData.items" :key="work.id">
+            <tr v-for="work in worksData.items" :key="work.slug">
               <td class="title-cell">
-                <NuxtLink :to="`/admin/works/${work.id}`" class="work-title">
+                <NuxtLink :to="`/admin/works/${work.slug}`" class="work-title">
                   {{ work.title }}
                 </NuxtLink>
               </td>
@@ -111,8 +108,8 @@ useHead({
               </td>
               <td>
                 <div class="actions">
-                  <NuxtLink :to="`/admin/works/${work.id}`" class="action-link">编辑</NuxtLink>
-                  <button class="action-link delete" @click="handleDelete(work.id)">删除</button>
+                  <NuxtLink :to="`/admin/works/${work.slug}`" class="action-link">编辑</NuxtLink>
+                  <button class="action-link delete" @click="handleDelete(work.slug)">删除</button>
                 </div>
               </td>
             </tr>

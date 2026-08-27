@@ -31,7 +31,7 @@ useHead({
 
         <section class="journal-section section">
           <div v-if="journalsData.items.length > 0" class="journal-list">
-            <JournalCard v-for="journal in journalsData.items" :key="journal.id" :journal="journal" />
+            <JournalCard v-for="journal in journalsData.items" :key="journal.slug" :journal="journal" />
           </div>
           <div v-else class="empty-state">
             <p>暂无日志</p>
