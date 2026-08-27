@@ -4,17 +4,9 @@ slug: "wood-firing-log"
 date: "2026-02-25"
 createdAt: "2026-02-25T02:00:00Z"
 cover: "/images/journal/journal-02-cover.jpg"
-excerpt: ""
+excerpt: "（链路验证）这次柴烧持续了三天三夜，记录一下过程和心得。"
 status: "published"
-description: ""
-extension: "md"
-meta: {}
-navigation: true
-path: "/journal/wood-firing-log"
-seo: {"title":"柴窑烧成记录","description":""}
-stem: "journal/wood-firing-log"
-__hash__: "pliBYbn8AxsbrHFqN7Iaeudk45T2IBk5tptctqI6Pxk"
-updatedAt: "2026-08-27T01:02:04.797Z"
+updatedAt: "2026-08-27T01:12:39.339Z"
 ---
 
 ## 装窑
@@ -29,3 +21,6 @@ updatedAt: "2026-08-27T01:02:04.797Z"
 
 最高温达到1280度，保温4小时。然后自然冷却三天再开窑。
 
+## 开窑心得（链路验证）
+
+开窑最期待的就是看到落灰和火痕的效果，这次杯子肩部落灰非常漂亮，值得尝试更高的窑位摆放。
