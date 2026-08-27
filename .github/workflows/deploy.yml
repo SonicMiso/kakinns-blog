@@ -2,7 +2,8 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [main]
+    branches:
+      - master
   workflow_dispatch:
 
 env:
@@ -13,10 +14,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
+    # GitHub Actions does not allow using secrets directly
+    # in step-level `if` expressions.
+    # Expose them through env first.
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '~/kakins-blog' }}
+
     steps:
+      # ------------------------------------------------------------
+      # 1. Checkout
+      # ------------------------------------------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ------------------------------------------------------------
+      # 2. Node.js / pnpm
+      # ------------------------------------------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -28,15 +45,27 @@ jobs:
           corepack enable
           corepack prepare pnpm@11.24.0 --activate
 
+      # ------------------------------------------------------------
+      # 3. Install dependencies
+      # ------------------------------------------------------------
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # ------------------------------------------------------------
+      # 4. Build Nuxt application
+      # ------------------------------------------------------------
       - name: Build app
         run: pnpm run build
 
+      # ------------------------------------------------------------
+      # 5. Setup Docker Buildx
+      # ------------------------------------------------------------
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # ------------------------------------------------------------
+      # 6. Build production image
+      # ------------------------------------------------------------
       - name: Build production image
         uses: docker/build-push-action@v6
         with:
@@ -44,72 +73,177 @@ jobs:
           file: ./Dockerfile
           push: false
           load: true
+
           build-args: |
             TARGET_APP_ENV=production
             PNPM_REGISTRY=https://registry.npmmirror.com
             NUXT_PUBLIC_SITE_COMMIT_SHA=${{ github.sha }}
             NUXT_PUBLIC_SITE_BUILD_TIME=${{ github.run_started_at }}
-          tags: ${{ env.IMAGE_NAME }}:prod-${{ github.sha }}
+
+          tags: |
+            ${{ env.IMAGE_NAME }}:prod-${{ github.sha }}
+
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # ------------------------------------------------------------
+      # 7. Save Docker image
+      # ------------------------------------------------------------
       - name: Save image tarball
         run: |
           mkdir -p dist
-          docker save ${{ env.IMAGE_NAME }}:prod-${GITHUB_SHA} -o dist/${{ env.IMAGE_NAME }}-prod.tar
 
+          docker save \
+            ${{ env.IMAGE_NAME }}:prod-${GITHUB_SHA} \
+            -o dist/${{ env.IMAGE_NAME }}-prod.tar
+
+          ls -lh dist/${{ env.IMAGE_NAME }}-prod.tar
+
+      # ============================================================
+      # VPS DEPLOYMENT
+      # ============================================================
+
+      # ------------------------------------------------------------
+      # 8. Copy image to VPS
+      # ------------------------------------------------------------
       - name: Copy image tarball to VPS
-        if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
+        if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/scp-action@v1.0.0
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
-          source: dist/${{ env.IMAGE_NAME }}-prod.tar
-          target: ${{ secrets.DEPLOY_PATH || '~/kakins-blog' }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ env.DEPLOY_SSH_KEY }}
+          port: ${{ env.DEPLOY_PORT }}
 
+          source: dist/${{ env.IMAGE_NAME }}-prod.tar
+          target: ${{ env.DEPLOY_PATH }}
+
+      # ------------------------------------------------------------
+      # 9. Deploy on VPS
+      # ------------------------------------------------------------
       - name: Deploy via SSH
-        if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
+        if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ env.DEPLOY_SSH_KEY }}
+          port: ${{ env.DEPLOY_PORT }}
+
           script: |
             set -e
-            cd ${{ secrets.DEPLOY_PATH || '~/kakins-blog' }}
-            git pull --ff-only origin main
-            docker load -i ${{ secrets.DEPLOY_PATH || '~/kakins-blog' }}/${{ env.IMAGE_NAME }}-prod.tar
+
+            echo "========================================"
+            echo "Starting kakins-blog deployment"
+            echo "========================================"
+
+            cd "${DEPLOY_PATH}"
+
+            echo "[1/5] Loading Docker image..."
+
+            docker load \
+              -i "${DEPLOY_PATH}/${IMAGE_NAME}-prod.tar"
+
+            echo "[2/5] Updating container..."
+
             docker compose up -d --force-recreate
+
+            echo "[3/5] Waiting for application..."
+
             sleep 3
+
+            echo "[4/5] Container status:"
             docker compose ps
-            for i in 1 2 3 4 5; do
-              CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ || true)
-              [ "$CODE" = "200" ] && break
-              echo "attempt $i HTTP=$CODE"
+
+            echo "[5/5] Health check..."
+
+            CODE="000"
+
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              CODE=$(curl \
+                -s \
+                -o /dev/null \
+                -w "%{http_code}" \
+                http://127.0.0.1:3000/ \
+                || true)
+
+              echo "Attempt ${i}: HTTP=${CODE}"
+
+              if [ "${CODE}" = "200" ]; then
+                echo "Health check passed."
+                break
+              fi
+
               sleep 5
             done
-            [ "$CODE" = "200" ]
 
+            if [ "${CODE}" != "200" ]; then
+              echo "Health check failed."
+
+              echo "Container status:"
+              docker compose ps
+
+              echo "Recent application logs:"
+              docker compose logs --tail=100
+
+              exit 1
+            fi
+
+            echo "========================================"
+            echo "Deployment successful"
+            echo "========================================"
+
+      # ------------------------------------------------------------
+      # 10. Remove uploaded tarball from VPS
+      # ------------------------------------------------------------
+      - name: Cleanup remote image tarball
+        if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ env.DEPLOY_SSH_KEY }}
+          port: ${{ env.DEPLOY_PORT }}
+
+          script: |
+            rm -f "${DEPLOY_PATH}/${IMAGE_NAME}-prod.tar"
+
+      # ============================================================
+      # GHCR FALLBACK
+      # ============================================================
+
+      # ------------------------------------------------------------
+      # 11. Login to GHCR when VPS deployment is not configured
+      # ------------------------------------------------------------
       - name: Login to GHCR fallback
-        if: ${{ secrets.DEPLOY_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
+        if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # ------------------------------------------------------------
+      # 12. Push image to GHCR fallback
+      # ------------------------------------------------------------
       - name: Push image to GHCR fallback
-        if: ${{ secrets.DEPLOY_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
+        if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
+
           push: true
+
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+          build-args: |
+            TARGET_APP_ENV=production
+            PNPM_REGISTRY=https://registry.npmmirror.com
+            NUXT_PUBLIC_SITE_COMMIT_SHA=${{ github.sha }}
+            NUXT_PUBLIC_SITE_BUILD_TIME=${{ github.run_started_at }}
+
           cache-from: type=gha
           cache-to: type=gha,mode=max
