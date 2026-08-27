@@ -1,4 +1,8 @@
 import { Octokit } from 'octokit'
+import { Buffer } from 'node:buffer'
+import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs'
+import path from 'node:path'
+
 
 interface CommitFile {
   path: string
@@ -50,18 +54,14 @@ function isConfigured() {
  * 本地写入 content/ 目录（dev 环境或 GitHub 未配置时使用，让后台保存立即能反映）
  */
 function writeLocalFile(relativePath: string, content: string) {
-  const fs = require('node:fs') as typeof import('node:fs')
-  const path = require('node:path') as typeof import('node:path')
   const full = path.resolve(process.cwd(), relativePath)
-  fs.mkdirSync(path.dirname(full), { recursive: true })
-  fs.writeFileSync(full, content, 'utf-8')
+  mkdirSync(path.dirname(full), { recursive: true })
+  writeFileSync(full, content, 'utf-8')
 }
 
 function deleteLocalFile(relativePath: string) {
-  const fs = require('node:fs') as typeof import('node:fs')
-  const path = require('node:path') as typeof import('node:path')
   const full = path.resolve(process.cwd(), relativePath)
-  if (fs.existsSync(full)) fs.unlinkSync(full)
+  if (existsSync(full)) unlinkSync(full)
 }
 
 /**
