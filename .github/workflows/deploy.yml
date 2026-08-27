@@ -18,7 +18,7 @@ jobs:
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
-      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '~/kakins-blog' }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/opt/kakins-blog' }}
 
     steps:
       - name: Checkout
@@ -78,7 +78,7 @@ jobs:
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
           source: dist/${{ env.IMAGE_NAME }}-prod.tar
-          target: ${{ env.DEPLOY_PATH }}
+          target: /tmp
 
       - name: Deploy via SSH
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
@@ -90,8 +90,14 @@ jobs:
           port: ${{ env.DEPLOY_PORT }}
           script: |
             set -e
-            cd "${{ env.DEPLOY_PATH }}"
-            docker load -i "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar"
+            DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
+            TAR_PATH="/tmp/${{ env.IMAGE_NAME }}-prod.tar"
+            if [ ! -f "${TAR_PATH}" ]; then
+              TAR_PATH="$(find /tmp "${DEPLOY_DIR}" -maxdepth 4 -type f -name "${{ env.IMAGE_NAME }}-prod.tar" | head -n 1 || true)"
+            fi
+            test -n "${TAR_PATH}" && test -f "${TAR_PATH}"
+            cd "${DEPLOY_DIR}"
+            docker load -i "${TAR_PATH}"
             docker tag "${{ env.IMAGE_NAME }}:prod-${{ github.sha }}" "${{ env.IMAGE_NAME }}:latest"
             docker compose up -d --force-recreate
             sleep 3
@@ -122,7 +128,7 @@ jobs:
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
           script: |
-            rm -f "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar"
+            rm -f "/tmp/${{ env.IMAGE_NAME }}-prod.tar" "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar"
 
       - name: Login to GHCR fallback
         if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
