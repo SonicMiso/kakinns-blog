@@ -5,21 +5,13 @@ date: "2026-03-15"
 createdAt: "2026-03-15T02:00:00Z"
 category: "wood"
 cover: "/images/works/walnut-box-01-cover.jpg"
-excerpt: ""
+excerpt: "（链路验证）一件用北美黑胡桃制作的桌面收纳盒，采用榫卯结构，表面涂抹天然木蜡油。"
 materials: ["北美黑胡桃木","天然木蜡油"]
 tools: ["台锯","带锯","砂光机","凿子"]
 gallery: ["/images/works/walnut-box-01-01.jpg","/images/works/walnut-box-01-02.jpg","/images/works/walnut-box-01-03.jpg"]
 featured: true
 status: "published"
-description: ""
-extension: "md"
-meta: {}
-navigation: true
-path: "/works/walnut-box-01"
-seo: {"title":"胡桃木收纳盒","description":""}
-stem: "works/walnut-box-01"
-__hash__: "A4GY2JNq8Y9QNnszuIS1k8IgR9HbU07gLodds8CpgzY"
-updatedAt: "2026-08-27T01:01:59.659Z"
+updatedAt: "2026-08-27T01:07:48.972Z"
 ---
 
 ## 设计与选材
@@ -32,4 +24,4 @@ updatedAt: "2026-08-27T01:01:59.659Z"
 2. 开榫：使用榫卯结构连接四边
 3. 打磨：从 80 目到 600 目逐级打磨
 4. 上油：涂抹三遍天然木蜡油
-
+5. 组装与检查：试装所有部件，确保接缝紧密无松动。（链路验证）
