@@ -142,7 +142,7 @@ export default defineEventHandler(async (event) => {
     const octo = getOctokitSafe()
     const owner = String(githubCfg.owner || '')
     const repo = String(githubCfg.repo || '')
-    const branch = String(githubCfg.branch || 'main')
+    const branch = String(githubCfg.branch || 'master')
 
     // a. 确认 sinceSha 已经在远端分支上（防止本地 push 失败但以为在同步中）
     let pushed = await isAncestorOrSame({
@@ -241,7 +241,7 @@ export default defineEventHandler(async (event) => {
   // 且由于 localOnly=true 不会触发 Actions，因此保持 unknown（UI 显示「本地模式，无需同步」）。
   if (!ghConfigured) {
     state.state = 'unknown'
-    if (!state.errorMessage) state.errorMessage = '当前未配置 GITHUB_TOKEN/OWNER/REPO，后台保存只写本地 content/，无需主站同步。'
+    if (!state.errorMessage) state.errorMessage = '当前未配置 NUXT_GITHUB_TOKEN/OWNER/REPO（或 compose 源变量映射），后台保存只写本地 content/，无需主站同步。'
     return done(state)
   }
 

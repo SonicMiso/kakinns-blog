@@ -17,10 +17,10 @@ interface DeleteFile {
 function getOctokit() {
   const { github } = useRuntimeConfig() as any
   // 国内服务器访问 api.github.com 会卡顿/超时：支持通过自建代理或 ghproxy 反代
-  // 在 nuxt.config runtimeConfig.github 或 .env GITHUB_API_BASE 里填入，例如：
+  // 在 nuxt runtime env（NUXT_GITHUB_BASE_URL）或部署 env 源变量（GITHUB_API_BASE）里填入，例如：
   //   https://ghproxy.com/https://api.github.com   （公开代理，免费但可能限流）
   //   https://你的自建fastgithub域名/api            （自建 fastgithub/mirrorkhanh 反代）
-  const baseUrl = github.baseUrl || process.env.GITHUB_API_BASE || undefined
+  const baseUrl = github.baseUrl || process.env.NUXT_GITHUB_BASE_URL || process.env.GITHUB_API_BASE || undefined
   return new Octokit({
     auth: github.token,
     baseUrl,
@@ -35,7 +35,7 @@ function assertConfig() {
     throw createError({
       statusCode: 500,
       statusMessage:
-        '缺少 GitHub 配置：请设置 GITHUB_TOKEN / GITHUB_OWNER / GITHUB_REPO 环境变量。本地开发可跳过，直接写本地 content/ 目录。'
+        '缺少 GitHub 配置：请设置 NUXT_GITHUB_TOKEN / NUXT_GITHUB_OWNER / NUXT_GITHUB_REPO（或在 compose 中映射对应源变量）。本地开发可跳过，直接写本地 content/ 目录。'
     })
   }
   return github
@@ -99,7 +99,7 @@ export async function commitContentChanges(params: {
     if (process.env.NODE_ENV === 'production') {
       throw createError({
         statusCode: 500,
-        statusMessage: '生产环境缺少 GitHub 配置：请设置 GITHUB_TOKEN / GITHUB_OWNER / GITHUB_REPO 后再保存内容。'
+        statusMessage: '生产环境缺少 GitHub 配置：请设置 NUXT_GITHUB_TOKEN / NUXT_GITHUB_OWNER / NUXT_GITHUB_REPO 后再保存内容。'
       })
     }
     for (const f of upserts) writeLocalFile(f.path, f.content)
