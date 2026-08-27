@@ -13,9 +13,11 @@ export default defineEventHandler(async (event) => {
     readRawContentBody('works', slug) ||
     (typeof raw.process === 'string'
       ? raw.process
-      : typeof raw.content === 'string'
-        ? raw.content
-        : bodyLikeToString(raw.body))
+      : bodyLikeToString(raw.process) ||
+        typeof raw.content === 'string'
+          ? raw.content
+          : bodyLikeToString(raw.content) ||
+            bodyLikeToString(raw.body))
 
   // 注意：Nuxt Content Document 内部是 Proxy + getter，不能用 Object.entries 过滤字段
   //（会把 title/slug/materials 这些访问器属性全丢掉，只剩空对象）。

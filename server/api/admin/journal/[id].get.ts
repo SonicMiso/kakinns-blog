@@ -13,7 +13,8 @@ export default defineEventHandler(async (event) => {
     readRawContentBody('journal', slug) ||
     (typeof raw.content === 'string'
       ? raw.content
-      : bodyLikeToString(raw.body))
+      : bodyLikeToString(raw.content) ||
+        bodyLikeToString(raw.body))
 
   const out: any = { ...raw, content: contentText }
   delete out.body
