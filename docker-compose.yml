@@ -1,12 +1,6 @@
 services:
   kakins-blog:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      # 国内构建加速：npmmirror（淘宝源）。可在服务器 .env 里覆盖。
-      args:
-        PNPM_REGISTRY: ${NPM_REGISTRY:-${PNPM_REGISTRY:-https://registry.npmmirror.com}}
-    image: kakins-blog:latest
+    image: kakins-blog:${IMAGE_TAG:-latest}
     container_name: kakins-blog
     restart: unless-stopped
     ports:
@@ -22,7 +16,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - GITHUB_OWNER=${GITHUB_OWNER:-}
       - GITHUB_REPO=${GITHUB_REPO:-}
-      - GITHUB_BRANCH=${GITHUB_BRANCH:-main}
+      - GITHUB_BRANCH=${GITHUB_BRANCH:-master}
       - GITHUB_COMMITTER_NAME=${GITHUB_COMMITTER_NAME:-Kakin Studio Bot}
       - GITHUB_COMMITTER_EMAIL=${GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}
       # 国内服务器 GitHub API 反代，留空走官方；推荐填下面两种之一
@@ -39,7 +33,7 @@ services:
       - 114.114.114.114
       - 8.8.8.8
     healthcheck:
-      # compose 里的 healthcheck 会覆盖 Dockerfile，注意用 Node 26 内置 fetch（alpine 没 wget）
+      # compose 里的 healthcheck 会覆盖 Dockerfile，使用 Node 内置 fetch（alpine 没 wget）
       # exec form 需要 shell 解析才能传 JS 字符串，所以用 CMD-SHELL
       test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 30s
