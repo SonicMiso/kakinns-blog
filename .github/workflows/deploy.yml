@@ -103,30 +103,19 @@ jobs:
             DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
             TAR_PATH="/tmp/${{ env.IMAGE_NAME }}-prod.tar"
 
-            export ADMIN_USERNAME="${ADMIN_USERNAME}"
-            export ADMIN_PASSWORD="${ADMIN_PASSWORD}"
-            export SESSION_SECRET="${SESSION_SECRET}"
-            export GITHUB_TOKEN="${APP_GITHUB_TOKEN}"
-            export GITHUB_OWNER="${APP_GITHUB_OWNER}"
-            export GITHUB_REPO="${APP_GITHUB_REPO}"
-            export GITHUB_BRANCH="${APP_GITHUB_BRANCH}"
-            export GITHUB_COMMITTER_NAME="${APP_GITHUB_COMMITTER_NAME}"
-            export GITHUB_COMMITTER_EMAIL="${APP_GITHUB_COMMITTER_EMAIL}"
-            export GITHUB_API_BASE="${APP_GITHUB_API_BASE}"
-
             mkdir -p "${DEPLOY_DIR}"
             cat > "${DEPLOY_DIR}/.env.production" <<EOF
             NODE_ENV=production
-            ADMIN_USERNAME=${ADMIN_USERNAME}
-            ADMIN_PASSWORD=${ADMIN_PASSWORD}
-            SESSION_SECRET=${SESSION_SECRET}
-            GITHUB_TOKEN=${GITHUB_TOKEN}
-            GITHUB_OWNER=${GITHUB_OWNER}
-            GITHUB_REPO=${GITHUB_REPO}
-            GITHUB_BRANCH=${GITHUB_BRANCH}
-            GITHUB_COMMITTER_NAME=${GITHUB_COMMITTER_NAME}
-            GITHUB_COMMITTER_EMAIL=${GITHUB_COMMITTER_EMAIL}
-            GITHUB_API_BASE=${GITHUB_API_BASE}
+            ADMIN_USERNAME=${{ env.ADMIN_USERNAME }}
+            ADMIN_PASSWORD=${{ env.ADMIN_PASSWORD }}
+            SESSION_SECRET=${{ env.SESSION_SECRET }}
+            GITHUB_TOKEN=${{ env.APP_GITHUB_TOKEN }}
+            GITHUB_OWNER=${{ env.APP_GITHUB_OWNER }}
+            GITHUB_REPO=${{ env.APP_GITHUB_REPO }}
+            GITHUB_BRANCH=${{ env.APP_GITHUB_BRANCH }}
+            GITHUB_COMMITTER_NAME=${{ env.APP_GITHUB_COMMITTER_NAME }}
+            GITHUB_COMMITTER_EMAIL=${{ env.APP_GITHUB_COMMITTER_EMAIL }}
+            GITHUB_API_BASE=${{ env.APP_GITHUB_API_BASE }}
             EOF
 
             if [ ! -f "${TAR_PATH}" ]; then
@@ -136,9 +125,6 @@ jobs:
             cd "${DEPLOY_DIR}"
             docker load -i "${TAR_PATH}"
             docker tag "${{ env.IMAGE_NAME }}:prod-${{ github.sha }}" "${{ env.IMAGE_NAME }}:latest"
-            set -a
-            . "${DEPLOY_DIR}/.env.production"
-            set +a
             docker compose --env-file "${DEPLOY_DIR}/.env.production" up -d --force-recreate
             sleep 3
             docker compose ps
