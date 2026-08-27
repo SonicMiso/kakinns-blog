@@ -1,0 +1,138 @@
+# Nuxt Studio Collections Schema（Studio 可编辑内容模型）
+# 参见 https://content.nuxt.com/docs/advanced/content-schema
+# 本 schema 让作者在 Studio 侧栏编辑器里看到"正确类型"的输入框（字符串/图片/下拉/数组/布尔），
+# 并与 shared/types.ts 中的 Work / Journal 类型保持一致。
+
+collections:
+  works:
+    # 业务唯一键：slug（Studio 新建时必须填）
+    id: slug
+    label: 作品
+    directory: content/works
+    # 新建作品时预填充的 frontmatter 默认值
+    defaults:
+      category: wood
+      status: draft
+      featured: false
+      materials: []
+      tools: []
+      gallery: []
+      cover: ""
+    fields:
+      slug:
+        type: string
+        required: true
+        label: 英文 Slug（URL / 文件名为 slug.md）
+        placeholder: 例如 walnut-box-01、ceramic-cup-01
+        pattern: '^[a-z0-9][a-z0-9-]*$'
+      title:
+        type: string
+        required: true
+        label: 标题
+        placeholder: 例如 胡桃木收纳盒
+      date:
+        type: date
+        required: true
+        label: 发布日期
+      category:
+        type: select
+        required: true
+        label: 作品分类
+        options:
+          - value: wood
+            label: 木作
+          - value: ceramic
+            label: 陶瓷
+          - value: textile
+            label: 织物
+          - value: other
+            label: 其他
+      cover:
+        type: media
+        required: false
+        label: 封面图
+      excerpt:
+        type: string
+        required: false
+        label: 摘要（作品列表卡片/首页展示）
+        multiline: true
+        rows: 3
+      materials:
+        type: string[]
+        label: 材料清单
+        default: []
+      tools:
+        type: string[]
+        label: 使用工具
+        default: []
+      gallery:
+        type: media[]
+        label: 作品图集
+        default: []
+      featured:
+        type: boolean
+        label: 首页精选
+        default: false
+      status:
+        type: select
+        label: 发布状态
+        options:
+          - value: draft
+            label: 草稿（默认不上线）
+          - value: published
+            label: 已发布（前台可见）
+      createdAt:
+        type: datetime
+        label: 创建时间（后台 PUT 自动写入）
+        readOnly: false
+      updatedAt:
+        type: datetime
+        label: 更新时间（后台 PUT 自动写入）
+        readOnly: false
+
+  journal:
+    id: slug
+    label: 日志
+    directory: content/journal
+    defaults:
+      status: draft
+      cover: ""
+    fields:
+      slug:
+        type: string
+        required: true
+        label: 英文 Slug
+        placeholder: 例如 thoughts-on-woodworking
+        pattern: '^[a-z0-9][a-z0-9-]*$'
+      title:
+        type: string
+        required: true
+        label: 日志标题
+      date:
+        type: date
+        required: true
+        label: 日志日期
+      cover:
+        type: media
+        required: false
+        label: 封面图
+      excerpt:
+        type: string
+        required: false
+        label: 摘要（日志卡片显示）
+        multiline: true
+        rows: 3
+      status:
+        type: select
+        label: 发布状态
+        options:
+          - value: draft
+            label: 草稿
+          - value: published
+            label: 已发布
+      createdAt:
+        type: datetime
+        label: 创建时间（后台 PUT 自动写入）
+      updatedAt:
+        type: datetime
+        label: 更新时间（后台 PUT 自动写入）
