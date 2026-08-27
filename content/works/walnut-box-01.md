@@ -11,7 +11,15 @@ tools: ["台锯","带锯","砂光机","凿子"]
 gallery: ["/images/works/walnut-box-01-01.jpg","/images/works/walnut-box-01-02.jpg","/images/works/walnut-box-01-03.jpg"]
 featured: true
 status: "published"
-updatedAt: "2026-08-27T00:59:51.617Z"
+description: ""
+extension: "md"
+meta: {}
+navigation: true
+path: "/works/walnut-box-01"
+seo: {"title":"胡桃木收纳盒","description":""}
+stem: "works/walnut-box-01"
+__hash__: "A4GY2JNq8Y9QNnszuIS1k8IgR9HbU07gLodds8CpgzY"
+updatedAt: "2026-08-27T01:01:59.659Z"
 ---
 
 ## 设计与选材
