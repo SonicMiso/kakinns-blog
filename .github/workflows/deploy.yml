@@ -23,6 +23,12 @@ jobs:
       APP_GITHUB_OWNER: ${{ secrets.APP_GITHUB_OWNER }}
       APP_GITHUB_REPO: ${{ secrets.APP_GITHUB_REPO }}
       APP_GITHUB_BRANCH: ${{ secrets.APP_GITHUB_BRANCH }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || 'admin' }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'admin' }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'please-change-this' }}
+      APP_GITHUB_COMMITTER_NAME: ${{ secrets.APP_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot' }}
+      APP_GITHUB_COMMITTER_EMAIL: ${{ secrets.APP_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio' }}
+      APP_GITHUB_API_BASE: ${{ secrets.APP_GITHUB_API_BASE }}
 
     steps:
       - name: Checkout
@@ -86,13 +92,6 @@ jobs:
 
       - name: Deploy via SSH
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
-        env:
-          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || 'admin' }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'admin' }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'please-change-this' }}
-          APP_GITHUB_COMMITTER_NAME: ${{ secrets.APP_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot' }}
-          APP_GITHUB_COMMITTER_EMAIL: ${{ secrets.APP_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio' }}
-          APP_GITHUB_API_BASE: ${{ secrets.APP_GITHUB_API_BASE }}
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ env.DEPLOY_HOST }}
@@ -107,10 +106,10 @@ jobs:
             export ADMIN_USERNAME="${ADMIN_USERNAME}"
             export ADMIN_PASSWORD="${ADMIN_PASSWORD}"
             export SESSION_SECRET="${SESSION_SECRET}"
-            export GITHUB_TOKEN="${{ env.APP_GITHUB_TOKEN }}"
-            export GITHUB_OWNER="${{ env.APP_GITHUB_OWNER }}"
-            export GITHUB_REPO="${{ env.APP_GITHUB_REPO }}"
-            export GITHUB_BRANCH="${{ env.APP_GITHUB_BRANCH }}"
+            export GITHUB_TOKEN="${APP_GITHUB_TOKEN}"
+            export GITHUB_OWNER="${APP_GITHUB_OWNER}"
+            export GITHUB_REPO="${APP_GITHUB_REPO}"
+            export GITHUB_BRANCH="${APP_GITHUB_BRANCH}"
             export GITHUB_COMMITTER_NAME="${APP_GITHUB_COMMITTER_NAME}"
             export GITHUB_COMMITTER_EMAIL="${APP_GITHUB_COMMITTER_EMAIL}"
             export GITHUB_API_BASE="${APP_GITHUB_API_BASE}"
