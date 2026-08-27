@@ -9,6 +9,7 @@ interface WorkQueryOptions {
   featured?: boolean
   category?: string
   status?: 'draft' | 'published'
+  includeUnpublished?: boolean
 }
 
 /**
@@ -21,7 +22,7 @@ export async function queryWorks(event: any, opts: WorkQueryOptions = {}): Promi
 
   let q = queryCollection<Work>(event, 'works')
   if (opts.status) q = q.where('status', '=', opts.status)
-  else q = q.where('status', '=', 'published') as any
+  else if (!opts.includeUnpublished) q = q.where('status', '=', 'published') as any
   if (opts.category) q = q.where('category', '=', opts.category) as any
   if (opts.featured !== undefined) q = q.where('featured', '=', opts.featured) as any
 
@@ -40,6 +41,7 @@ interface JournalQueryOptions {
   limit?: number
   page?: number
   status?: 'draft' | 'published'
+  includeUnpublished?: boolean
 }
 
 export async function queryJournals(
@@ -52,7 +54,7 @@ export async function queryJournals(
 
   let q = queryCollection<Journal>(event, 'journal')
   if (opts.status) q = q.where('status', '=', opts.status)
-  else q = q.where('status', '=', 'published') as any
+  else if (!opts.includeUnpublished) q = q.where('status', '=', 'published') as any
 
   const all = await (q.order('date', 'DESC').order('createdAt', 'DESC') as any).all()
   const total = all.length

@@ -52,11 +52,21 @@ export default defineEventHandler(async (event) => {
   const deletes: { path: string }[] = []
   if (old.slug !== meta.slug) deletes.push({ path: `content/journal/${old.slug}.md` })
 
-  await commitContentChanges({
+  const result = await commitContentChanges({
     message: `edit(journal): 更新日志 ${meta.title} (${meta.slug})`,
     upserts: [{ path: `content/journal/${meta.slug}.md`, content: mdContent }],
     deletes
   })
 
-  return { ...meta, content: contentText } as Journal
+  return {
+    ...(meta as Journal),
+    content: contentText,
+    sync: {
+      localOnly: result.localOnly,
+      commitSha: result.sha || '',
+      commitHtmlUrl: result.commitHtmlUrl || '',
+      actionsRunUrl: result.actionsRunUrl || '',
+      savedAt: new Date().toISOString()
+    }
+  } as Journal & Record<string, any>
 })

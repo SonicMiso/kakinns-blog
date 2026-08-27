@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Journal } from '~/types'
 import { generateSlug } from '~/utils/format'
+import SyncStatusChip from '~/components/admin/SyncStatusChip.vue'
+import { writeLastPushed } from '~/composables/useLastPushed'
 
 definePageMeta({
   layout: false
@@ -63,16 +65,35 @@ async function handleSave() {
     alert('请输入标题')
     return
   }
+  if (!form.value.slug) {
+    alert('请输入 Slug')
+    return
+  }
+  if (!form.value.content || typeof form.value.content !== 'string' || form.value.content.trim().length === 0) {
+    if (!confirm('「正文」内容为空，确认继续保存？')) return
+  }
   saving.value = true
   try {
-    await $fetch(`/api/admin/journal/${slug}`, {
+    const payload: Record<string, any> = {
+      title: form.value.title,
+      slug: form.value.slug,
+      date: form.value.date,
+      cover: form.value.cover,
+      excerpt: form.value.excerpt ?? '',
+      status: form.value.status || 'draft',
+      content: String(form.value.content ?? '')
+    }
+    const res = await $fetch<any>(`/api/admin/journal/${slug}`, {
       method: 'PUT',
-      body: form.value
+      body: payload
     })
-    timestamps.value.updatedAt = new Date().toISOString()
+    writeLastPushed(res?.sync, { scope: 'journal', description: `更新日志 ${form.value.title}` })
+    if (res && typeof res.updatedAt === 'string') timestamps.value.updatedAt = res.updatedAt
+    else timestamps.value.updatedAt = new Date().toISOString()
     alert('保存成功')
-  } catch (e) {
-    alert('保存失败')
+  } catch (e: any) {
+    const msg = e?.data?.message || e?.message || '保存失败'
+    alert(`保存失败：${msg}`)
   } finally {
     saving.value = false
   }
@@ -81,7 +102,8 @@ async function handleSave() {
 async function handleDelete() {
   if (!confirm('确定要删除这篇日志吗？')) return
   try {
-    await $fetch(`/api/admin/journal/${slug}`, { method: 'DELETE' })
+    const res = await $fetch<any>(`/api/admin/journal/${slug}`, { method: 'DELETE' })
+    writeLastPushed(res?.sync, { scope: 'journal', description: `删除日志 ${form.value.title || slug}` })
     await navigateTo('/admin/journal')
   } catch (e) {
     alert('删除失败')
@@ -102,6 +124,7 @@ useHead({
           <h1 class="page-title">编辑日志</h1>
         </div>
         <div class="header-actions">
+          <SyncStatusChip size="sm" scope-hint="日志内容同步状态" />
           <button class="btn-delete" @click="handleDelete">删除</button>
           <button class="btn-save" @click="handleSave" :disabled="saving || loading">
             {{ saving ? '保存中...' : '保存' }}

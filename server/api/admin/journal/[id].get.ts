@@ -1,6 +1,6 @@
 import type { Journal } from '~/types'
 import { queryCollection } from '@nuxt/content/server'
-import { readRawContentBody, bodyLikeToString } from '../../../utils/rawContent'
+import { minimarkToMarkdown } from '../../../utils/rawContent'
 
 // 路由参数语义：slug（字符串）
 export default defineEventHandler(async (event) => {
@@ -9,14 +9,15 @@ export default defineEventHandler(async (event) => {
   const raw = matches[0]
   if (!raw) throw createError({ statusCode: 404, statusMessage: 'Journal not found' })
 
-  const contentText: string =
-    readRawContentBody('journal', slug) ||
-    (typeof raw.content === 'string'
-      ? raw.content
-      : bodyLikeToString(raw.content) ||
-        bodyLikeToString(raw.body))
-
-  const out: any = { ...raw, content: contentText }
-  delete out.body
-  return out
+  return {
+    title: raw.title,
+    slug: raw.slug,
+    date: raw.date,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+    cover: raw.cover,
+    excerpt: raw.excerpt,
+    status: raw.status || 'draft',
+    content: minimarkToMarkdown(raw.content ?? raw.body)
+  }
 })

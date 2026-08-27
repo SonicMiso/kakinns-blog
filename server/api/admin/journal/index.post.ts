@@ -39,10 +39,20 @@ export default defineEventHandler(async (event) => {
   const fm = frontmatter(meta)
   const mdContent = fm + (body.content || '') + '\n'
 
-  await commitContentChanges({
+  const result = await commitContentChanges({
     message: `feat(journal): 新建日志 ${title} (${slug})`,
     upserts: [{ path: `content/journal/${slug}.md`, content: mdContent }]
   })
 
-  return { ...meta, content: body.content || '' } as Journal
+  return {
+    ...(meta as Journal),
+    content: body.content || '',
+    sync: {
+      localOnly: result.localOnly,
+      commitSha: result.sha || '',
+      commitHtmlUrl: result.commitHtmlUrl || '',
+      actionsRunUrl: result.actionsRunUrl || '',
+      savedAt: new Date().toISOString()
+    }
+  } as Journal & Record<string, any>
 })

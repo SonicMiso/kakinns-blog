@@ -9,9 +9,18 @@ export default defineEventHandler(async (event) => {
   const journal = matches[0]
   if (!journal) throw createError({ statusCode: 404, statusMessage: 'Journal not found' })
 
-  await commitContentChanges({
+  const result = await commitContentChanges({
     message: `delete(journal): 删除日志 ${journal.title} (${journal.slug})`,
     deletes: [{ path: `content/journal/${journal.slug}.md` }]
   })
-  return { success: true }
+  return {
+    success: true,
+    sync: {
+      localOnly: result.localOnly,
+      commitSha: result.sha || '',
+      commitHtmlUrl: result.commitHtmlUrl || '',
+      actionsRunUrl: result.actionsRunUrl || '',
+      savedAt: new Date().toISOString()
+    }
+  }
 })

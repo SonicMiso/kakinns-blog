@@ -20,6 +20,8 @@ allowBuilds:
   "@node-rs/*": true
   # better-sqlite3：原生 C++ 编译（如果用到）
   better-sqlite3: true
+  # sharp：图片处理原生二进制（Nuxt Studio / Content 依赖）
+  sharp: true
 
 # ---------- 依赖提升策略 ----------
 # Nuxt / Vue 生态需要单实例，开启全盘提升（等价于旧版 shamefully-hoist=true）

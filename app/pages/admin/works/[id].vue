@@ -2,6 +2,8 @@
 import type { Work } from '~/types'
 import { CATEGORIES } from '~/types'
 import { generateSlug } from '~/utils/format'
+import SyncStatusChip from '~/components/admin/SyncStatusChip.vue'
+import { writeLastPushed } from '~/composables/useLastPushed'
 
 definePageMeta({
   layout: false
@@ -74,22 +76,42 @@ async function handleSave() {
     alert('请输入标题')
     return
   }
+  if (!form.value.slug) {
+    alert('请输入 Slug')
+    return
+  }
+  if (!form.value.process || typeof form.value.process !== 'string' || form.value.process.trim().length === 0) {
+    if (!confirm('「制作过程」内容为空，确认继续保存？')) return
+  }
   saving.value = true
   try {
-    await $fetch(`/api/admin/works/${slug}`, {
+    // 确保 process 字段一定按字符串发出，且 body 里只包含 PUT handler 认识的字段
+    const payload: Record<string, any> = {
+      title: form.value.title,
+      slug: form.value.slug,
+      date: form.value.date,
+      category: form.value.category,
+      cover: form.value.cover,
+      excerpt: form.value.excerpt ?? '',
+      materials: String(form.value.materials ?? '').split('\n').filter((m: string) => m.trim()),
+      tools: String(form.value.tools ?? '').split('\n').filter((t: string) => t.trim()),
+      gallery: String(form.value.gallery ?? '').split('\n').filter((g: string) => g.trim()),
+      featured: !!form.value.featured,
+      status: form.value.status || 'draft',
+      process: String(form.value.process ?? '')
+    }
+    const res = await $fetch<any>(`/api/admin/works/${slug}`, {
       method: 'PUT',
-      body: {
-        ...form.value,
-        materials: form.value.materials.split('\n').filter(m => m.trim()),
-        tools: form.value.tools.split('\n').filter(t => t.trim()),
-        gallery: form.value.gallery.split('\n').filter(g => g.trim())
-      }
+      body: payload
     })
-    // 保存成功后刷新 updatedAt 显示
-    timestamps.value.updatedAt = new Date().toISOString()
+    writeLastPushed(res?.sync, { scope: 'works', description: `更新作品 ${form.value.title}` })
+    // 保存成功：用后端返回的真实 updatedAt（不用客户端自己 new Date()，避免时区/秒级不一致）
+    if (res && typeof res.updatedAt === 'string') timestamps.value.updatedAt = res.updatedAt
+    else timestamps.value.updatedAt = new Date().toISOString()
     alert('保存成功')
-  } catch (e) {
-    alert('保存失败')
+  } catch (e: any) {
+    const msg = e?.data?.message || e?.message || '保存失败'
+    alert(`保存失败：${msg}`)
   } finally {
     saving.value = false
   }
@@ -98,7 +120,8 @@ async function handleSave() {
 async function handleDelete() {
   if (!confirm('确定要删除这个作品吗？')) return
   try {
-    await $fetch(`/api/admin/works/${slug}`, { method: 'DELETE' })
+    const res = await $fetch<any>(`/api/admin/works/${slug}`, { method: 'DELETE' })
+    writeLastPushed(res?.sync, { scope: 'works', description: `删除作品 ${form.value.title || slug}` })
     await navigateTo('/admin/works')
   } catch (e) {
     alert('删除失败')
@@ -119,6 +142,7 @@ useHead({
           <h1 class="page-title">编辑作品</h1>
         </div>
         <div class="header-actions">
+          <SyncStatusChip size="sm" scope-hint="作品内容同步状态" />
           <button class="btn-delete" @click="handleDelete">删除</button>
           <button class="btn-save" @click="handleSave" :disabled="saving || loading">
             {{ saving ? '保存中...' : '保存' }}

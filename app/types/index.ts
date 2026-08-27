@@ -81,3 +81,55 @@ export const CATEGORIES = [
 ] as const
 
 export type CategoryValue = typeof CATEGORIES[number]['value']
+
+// ==================== Admin 写操作返回的「同步元信息」====================
+// 后台 POST/PUT/DELETE 响应体的 sync 字段；前端存到 localStorage 作为轮询起点。
+export interface AdminWriteSyncInfo {
+  localOnly: boolean
+  commitSha: string
+  commitHtmlUrl: string
+  actionsRunUrl: string
+  savedAt: string
+}
+
+export type SyncStateState = 'synced' | 'syncing' | 'failed' | 'unknown'
+
+/** 后台 GET /api/admin/sync-status 的响应（与 server/api/admin/sync-status.get.ts 对齐） */
+export interface SyncStatusResponse {
+  state: SyncStateState
+  sinceSha: string | null
+  lastSavedAt: string | null
+  siteUrl: string
+  errorMessage?: string
+  siteCommitSha?: string
+  siteBuildTime?: string
+  content?: {
+    worksCount: number
+    journalCount: number
+    lastUpdatedAt: string
+  }
+  isSiteSyncedByPrefix?: boolean
+  isSiteSyncedByCompare?: boolean
+  githubConfigured?: boolean
+  pushed?: boolean
+  aheadBy?: number
+  elapsedMs?: number
+  actionsRun?: {
+    status: string
+    conclusion: string | null
+    html_url: string
+    started_at: string | null
+    updated_at: string | null
+  }
+}
+
+/** 前端 localStorage['admin:lastPushedCommit'] 存的结构 */
+export interface LastPushedCommit {
+  commitSha: string
+  commitHtmlUrl?: string
+  actionsRunUrl?: string
+  savedAt: string
+  /** 标记这条 lastPushed 是由哪个页面产生的，便于芯片显示「最近一次操作」的描述 */
+  scope?: 'works' | 'journal' | 'dashboard' | 'global'
+  description?: string
+}

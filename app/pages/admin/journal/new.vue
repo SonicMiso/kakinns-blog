@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { generateSlug } from '~/utils/format'
+import SyncStatusChip from '~/components/admin/SyncStatusChip.vue'
+import { writeLastPushed } from '~/composables/useLastPushed'
 
 definePageMeta({
   layout: false
@@ -32,10 +34,11 @@ async function handleCreate() {
   }
   saving.value = true
   try {
-    const journal = await $fetch('/api/admin/journal', {
+    const journal = await $fetch<any>('/api/admin/journal', {
       method: 'POST',
       body: form.value
     })
+    writeLastPushed(journal?.sync, { scope: 'journal', description: `新建日志 ${journal?.title || form.value.title}` })
     alert('创建成功')
     await navigateTo(`/admin/journal/${journal.slug}`)
   } catch (e) {
@@ -62,9 +65,12 @@ useHead({
           <NuxtLink to="/admin/journal" class="back-link">← 返回列表</NuxtLink>
           <h1 class="page-title">新建日志</h1>
         </div>
-        <button class="btn-save" @click="handleCreate" :disabled="saving">
-          {{ saving ? '创建中...' : '创建' }}
-        </button>
+        <div class="header-actions">
+          <SyncStatusChip size="sm" scope-hint="日志内容同步状态" />
+          <button class="btn-save" @click="handleCreate" :disabled="saving">
+            {{ saving ? '创建中...' : '创建' }}
+          </button>
+        </div>
       </header>
 
       <div class="form-container">
@@ -127,6 +133,12 @@ useHead({
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: var(--space-6);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .back-link {

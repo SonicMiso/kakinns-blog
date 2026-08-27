@@ -89,11 +89,21 @@ export default defineEventHandler(async (event) => {
   const deletes: { path: string }[] = []
   if (old.slug !== meta.slug) deletes.push({ path: `content/works/${old.slug}.md` })
 
-  await commitContentChanges({
+  const result = await commitContentChanges({
     message: `edit(works): 更新作品 ${meta.title} (${meta.slug})`,
     upserts: [{ path: `content/works/${meta.slug}.md`, content: md }],
     deletes
   })
 
-  return { ...meta, process: processText } as Work
+  return {
+    ...(meta as Work),
+    process: processText,
+    sync: {
+      localOnly: result.localOnly,
+      commitSha: result.sha || '',
+      commitHtmlUrl: result.commitHtmlUrl || '',
+      actionsRunUrl: result.actionsRunUrl || '',
+      savedAt: new Date().toISOString()
+    }
+  } as Work & Record<string, any>
 })

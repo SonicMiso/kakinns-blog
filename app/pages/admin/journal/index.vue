@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Journal } from '~/types'
 import { formatDate } from '~/utils/format'
+import SyncStatusChip from '~/components/admin/SyncStatusChip.vue'
+import { writeLastPushed } from '~/composables/useLastPushed'
 
 definePageMeta({
   layout: false
@@ -28,19 +30,26 @@ const { data: journalsData, refresh } = await useAsyncData('admin-journal', () =
 async function handleDelete(slug: string) {
   if (!confirm('确定要删除这篇日志吗？')) return
   try {
-    await $fetch(`/api/admin/journal/${slug}`, { method: 'DELETE' })
+    const res = await $fetch<any>(`/api/admin/journal/${slug}`, { method: 'DELETE' })
+    writeLastPushed(res?.sync, { scope: 'journal', description: `删除日志 ${slug}` })
     await refresh()
   } catch (e) {
     alert('删除失败')
   }
 }
 
-function toggleStatus(journal: Journal) {
+async function toggleStatus(journal: Journal) {
   const newStatus = journal.status === 'published' ? 'draft' : 'published'
-  $fetch(`/api/admin/journal/${journal.slug}`, {
-    method: 'PUT',
-    body: { status: newStatus }
-  }).then(() => refresh())
+  try {
+    const res = await $fetch<any>(`/api/admin/journal/${journal.slug}`, {
+      method: 'PUT',
+      body: { status: newStatus }
+    })
+    writeLastPushed(res?.sync, { scope: 'journal', description: `切换状态 ${journal.slug} -> ${newStatus}` })
+    await refresh()
+  } catch {
+    alert('状态更新失败')
+  }
 }
 
 watch([page, statusFilter], () => {
@@ -60,7 +69,10 @@ useHead({
           <h1 class="page-title">日志管理</h1>
           <p class="page-desc">管理所有制作日志</p>
         </div>
-        <NuxtLink to="/admin/journal/new" class="btn-primary">新建日志</NuxtLink>
+        <div class="header-actions">
+          <SyncStatusChip size="sm" scope-hint="日志内容同步状态" />
+          <NuxtLink to="/admin/journal/new" class="btn-primary">新建日志</NuxtLink>
+        </div>
       </header>
 
       <div class="filter-bar">
@@ -145,6 +157,12 @@ useHead({
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: var(--space-6);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .page-title {

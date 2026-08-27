@@ -6,9 +6,6 @@ export default defineNuxtConfig({
   css: ['~/assets/css/tokens.css', '~/assets/css/typography.css', '~/assets/css/globals.css'],
   content: {
     experimental: {
-      // 使用 Node.js 22.5+ 内置原生 SQLite，跳过 better-sqlite3 原生编译
-      // NOTE: 依赖升级（如 pnpm 11）后 better-sqlite3 需重编译，原生方案更稳定
-      // 参见 https://content.nuxt.com/docs/getting-started/configuration#experimentalsqliteconnector
       sqliteConnector: 'native'
     },
     build: {
@@ -33,22 +30,18 @@ export default defineNuxtConfig({
     }
   },
   routeRules: {
-    // 前台：SSR + SWR 60s
-    // 不是 prerender（prerender 会冻结构建时数据快照，后台改内容 rebuild 后 SWR 1 分钟内刷新）
     '/': { ssr: true, swr: 60 },
     '/works': { ssr: true, swr: 60 },
     '/works/**': { ssr: true, swr: 60 },
     '/journal': { ssr: true, swr: 60 },
     '/journal/**': { ssr: true, swr: 60 },
     '/about': { ssr: true, swr: 60 },
-    // 后台：纯客户端渲染（CSR），避免 SSR cookie 转发的竞态问题
     '/admin/**': { ssr: false }
   },
   runtimeConfig: {
     adminUsername: process.env.ADMIN_USERNAME || 'admin',
     adminPassword: process.env.ADMIN_PASSWORD || 'admin',
     sessionSecret: process.env.SESSION_SECRET || 'kakin-studio-secret-key-please-change',
-    // GitHub 凭据：后台写内容时通过 octokit 把变更 commit 到仓库，触发 CI 重建
     github: {
       token: process.env.GITHUB_TOKEN || '',
       owner: process.env.GITHUB_OWNER || '',
@@ -56,17 +49,22 @@ export default defineNuxtConfig({
       branch: process.env.GITHUB_BRANCH || 'main',
       committerName: process.env.GITHUB_COMMITTER_NAME || 'Kakin Studio Bot',
       committerEmail: process.env.GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio',
-      // 国内服务器：https://api.github.com 常被墙/超时，填反向代理地址
-      // 示例1（公开 ghproxy）：https://ghproxy.com/https://api.github.com
-      // 示例2（自建 fastgithub）：https://gh.yourdomain.com/api
       baseUrl: process.env.GITHUB_API_BASE || ''
     },
     public: {
       siteName: 'Kakin Studio',
-      siteDescription: '手工艺个人工作室'
+      siteDescription: '手工艺个人工作室',
+      // ===== 主站构建元信息（给后台同步状态芯片用）=====
+      // GitHub Actions / Dockerfile 构建时通过 build-args 注入：
+      //   --build-arg GITHUB_SHA=${{ github.sha }} BUILD_TIME=${{ github.run_started_at }}
+      // 开发模式未配置时，meta API 会 fallback 读本地 `git rev-parse HEAD` 与 Date.now()。
+      siteCommitSha: process.env.NUXT_PUBLIC_SITE_COMMIT_SHA || process.env.GITHUB_SHA || '',
+      siteBuildTime: process.env.NUXT_PUBLIC_SITE_BUILD_TIME || process.env.BUILD_TIME || '',
+      // 后台 sync-status 接口查询「远端主站 /api/meta」时用的 base URL；
+      // 部署时通过环境变量 NUXT_PUBLIC_SITE_URL 指定（例如 http://47.122.106.135:3000）。
+      // 留空 = 使用当前请求的 origin（同域回环），开发模式 & 单站点够用。
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || ''
     }
   },
-  nitro: {
-    // 移除旧的 fs storage 配置，不再存 server/data
-  }
+  nitro: {}
 })

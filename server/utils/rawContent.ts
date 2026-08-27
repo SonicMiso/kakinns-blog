@@ -1,45 +1,5 @@
-// 读取原始 markdown 文件（content/<collection>/<slug>.md），并把 YAML frontmatter 剥离，
-// 返回 YAML 块之后的正文（纯 markdown 字符串，保留换行与缩进）。
-//
-// 为什么需要这个：
-//   @nuxt/content 的 queryCollection 返回的 body 是 minimark AST（对象），
-//   无法直接用于"管理后台 textarea 编辑→保存"的闭环（对象 .toString() / JSON.stringify 会变成一堆 JSON）。
-//   管理后台读、写都走"原始 markdown 文件"链路，才能保证用户看到的和之前写的 100% 一致。
-//   如果原始文件读不到（生产 Docker 镜像运行期不包含 content 源码、或路径不匹配），
-//   退而求其次：用 minimark 对象反向还原出等价的 Markdown 源码。
-import { readFileSync, existsSync } from 'node:fs'
-import { resolve } from 'node:path'
-
-export function stripFrontmatter(markdownRaw: string): string {
-  if (!markdownRaw) return ''
-  const text = markdownRaw.replace(/^\uFEFF/, '')
-  const startMatch = text.match(/^---[ \t]*\r?\n/)
-  if (!startMatch) return text
-  const startIdx = startMatch[0].length
-  const rest = text.slice(startIdx)
-  const endRe = /^---[ \t]*(?:\r?\n|$)/m
-  const endMatch = rest.match(endRe)
-  if (!endMatch) return text
-  const after = rest.slice(endMatch.index! + endMatch[0].length)
-  return after.replace(/^\r?\n/, '')
-}
-
-export function readRawContentBody(
-  collection: 'works' | 'journal',
-  slug: string,
-  opts?: { projectRoot?: string }
-): string {
-  if (!slug) return ''
-  const root = opts?.projectRoot || resolve(process.cwd())
-  const filePath = resolve(root, 'content', collection, `${slug}.md`)
-  if (!existsSync(filePath)) return ''
-  try {
-    const raw = readFileSync(filePath, 'utf-8')
-    return stripFrontmatter(raw)
-  } catch {
-    return ''
-  }
-}
+// Nuxt Content 查询返回的正文是 minimark AST；这里统一把 AST 还原为 Markdown 字符串，
+// 供后台编辑器 textarea 直接展示/编辑。数据来源保持在 queryCollection，不再读取磁盘文件。
 
 // ===================== minimark AST → Markdown 源码还原 =====================
 //

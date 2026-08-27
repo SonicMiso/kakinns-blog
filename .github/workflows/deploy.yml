@@ -7,56 +7,67 @@ on:
 
 env:
   IMAGE_NAME: kakins-blog
-  CONTAINER_NAME: kakins-blog
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 26
+          node-version: 22
+          cache: pnpm
 
-      - name: Enable corepack (pnpm)
+      - name: Enable pnpm
         run: |
           corepack enable
           corepack prepare pnpm@11.24.0 --activate
-        env:
-          # pnpm 11 起使用 PNPM_CONFIG_ 前缀（不再读取 NPM_CONFIG_*）
-          PNPM_CONFIG_REGISTRY: https://registry.npmjs.org
 
-      # - name: Install dependencies & typecheck（可选，加快发现类型错误）
-      #   run: pnpm install --frozen-lockfile && pnpm run build
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Nuxt app
+        run: pnpm run build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ---- 本地构建（不走 registry，直接导出镜像供自托管服务器拉取）----
-      # 方案 A：推送到 GHCR（GitHub Container Registry）
-      - name: Login to GHCR
-        if: ${{ secrets.DEPLOY_HOST == '' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push image to GHCR
-        if: ${{ secrets.DEPLOY_HOST == '' }}
+      - name: Build production image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          file: ./Dockerfile
+          push: false
+          load: true
+          build-args: |
+            TARGET_APP_ENV=production
+            PNPM_REGISTRY=https://registry.npmmirror.com
+            NUXT_PUBLIC_SITE_COMMIT_SHA=${{ github.sha }}
+            NUXT_PUBLIC_SITE_BUILD_TIME=${{ github.run_started_at }}
+          tags: ${{ env.IMAGE_NAME }}:prod-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ---- 方案 B：有自托管服务器（SSH + Docker Compose 直接更新）----
+      - name: Save image tarball
+        run: |
+          mkdir -p dist
+          docker save ${{ env.IMAGE_NAME }}:prod-${GITHUB_SHA} -o dist/${{ env.IMAGE_NAME }}-prod.tar
+
+      - name: Copy image tarball to host
+        if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          source: dist/${{ env.IMAGE_NAME }}-prod.tar
+          target: ${{ secrets.DEPLOY_PATH || '~/kakins-blog' }}
+
       - name: Deploy via SSH
         if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.2.0
@@ -68,6 +79,35 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH || '~/kakins-blog' }}
             git pull --ff-only origin main
-            docker compose build --pull
-            docker compose up -d
-            docker image prune -f
+            docker load -i ${{ secrets.DEPLOY_PATH || '~/kakins-blog' }}/${{ env.IMAGE_NAME }}-prod.tar
+            docker compose up -d --force-recreate
+            sleep 3
+            docker compose ps
+            for i in 1 2 3 4 5; do
+              CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ || true)
+              [ "$CODE" = "200" ] && break
+              echo "attempt $i HTTP=$CODE"
+              sleep 5
+            done
+            [ "$CODE" = "200" ]
+
+      - name: Fallback push to GHCR
+        if: ${{ secrets.DEPLOY_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image to GHCR fallback
+        if: ${{ secrets.DEPLOY_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

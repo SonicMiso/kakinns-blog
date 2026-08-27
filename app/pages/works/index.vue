@@ -1,27 +1,41 @@
 <script setup lang="ts">
-import type { Work } from '~/types'
-import { CATEGORIES } from '~/types'
+import { CATEGORIES } from '~/../shared/types'
 
 const route = useRoute()
 const activeCategory = ref<string | null>(null)
 
-const worksList = ref<Work[]>([])
+const categoryParam = computed(() => {
+  const cat = route.query.category
+  if (!cat || typeof cat !== 'string') return null
+  if (CATEGORIES.some(c => c.value === cat)) return cat
+  return null
+})
+
+activeCategory.value = categoryParam.value
 
 function setCategory(cat: string | null) {
+  const q = { ...route.query }
+  if (cat) q.category = cat; else delete q.category
+  navigateTo({ path: '/works', query: q }, { replace: true })
+}
+
+watch(() => route.query.category, (v) => {
+  const cat = typeof v === 'string' && CATEGORIES.some(c => c.value === v) ? v : null
   activeCategory.value = cat
-}
+})
 
-async function loadWorks() {
-  let q = queryCollection<Work>('works').where('status', '=', 'published') as any
-  if (activeCategory.value) q = q.where('category', '=', activeCategory.value)
-  worksList.value = await q.order('date', 'DESC').all() as Work[]
-}
-
-// 初始 + 分类变化时刷新
-await loadWorks()
-watch(activeCategory, loadWorks)
-
-const worksData = computed(() => ({ items: worksList.value, total: worksList.value.length }))
+// Nuxt Content v3 公共 chainable 只暴露 where/andWhere/orWhere/order；需要用 useFetch + useAsyncData key 配合 watch 切换分类
+const { data: works } = await useAsyncData(
+  'works-list',
+  async () => {
+    const q = queryCollection('works').where('status', '=', 'published')
+    if (activeCategory.value) q.where('category', '=', activeCategory.value)
+    q.order('date', 'DESC').limit(100)
+    // .all() 是原始 builder 方法（Promise<Doc[]>），await 直接拿到数组
+    return (await q.all()) as any[]
+  },
+  { watch: [activeCategory], default: () => [] }
+)
 
 useHead({
   title: '作品 — Kakin Studio'
@@ -59,8 +73,8 @@ useHead({
       </div>
 
       <section class="works-section section">
-        <div v-if="worksData.items.length > 0" class="works-grid">
-          <WorkCard v-for="work in worksData.items" :key="work.slug" :work="work" />
+        <div v-if="works.length > 0" class="works-grid">
+          <WorkCard v-for="work in works" :key="work.slug" :work="work" />
         </div>
         <div v-else class="empty-state">
           <p>暂无作品</p>
@@ -78,21 +92,13 @@ useHead({
   max-width: 600px;
   margin: 0 auto;
 }
-
-.page-eyebrow {
-  margin-bottom: var(--space-3);
-}
-
-.page-title {
-  margin-bottom: var(--space-4);
-}
-
+.page-eyebrow { margin-bottom: var(--space-3); }
+.page-title { margin-bottom: var(--space-4); }
 .page-desc {
   color: var(--color-text-muted);
   font-size: 1rem;
   line-height: 1.7;
 }
-
 .filter-bar {
   display: flex;
   gap: var(--space-2);
@@ -103,7 +109,6 @@ useHead({
   border-bottom: 1px solid var(--color-border-light);
   margin-bottom: var(--space-10);
 }
-
 .filter-btn {
   padding: var(--space-2) var(--space-4);
   font-size: 0.85rem;
@@ -112,48 +117,38 @@ useHead({
   transition: all var(--transition-fast);
   min-height: 36px;
 }
-
 .filter-btn:hover {
   color: var(--color-text);
   background: var(--color-surface);
 }
-
 .filter-btn.active {
   color: var(--color-text);
   background: var(--color-surface-alt);
 }
-
 .works-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-8);
 }
-
 .empty-state {
   text-align: center;
   padding: var(--space-16) 0;
   color: var(--color-text-muted);
 }
-
 @media (max-width: 1024px) {
-  .works-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .works-grid { grid-template-columns: repeat(2, 1fr); }
 }
-
 @media (max-width: 768px) {
   .page-header {
     padding-top: var(--space-12);
     padding-bottom: var(--space-6);
     text-align: left;
   }
-
   .filter-bar {
     justify-content: flex-start;
     padding: var(--space-4) 0;
     margin-bottom: var(--space-8);
   }
-
   .works-grid {
     grid-template-columns: 1fr;
     gap: var(--space-6);

@@ -64,10 +64,20 @@ export default defineEventHandler(async (event) => {
 
   const md = frontmatter(meta) + (body.process || '') + '\n'
 
-  await commitContentChanges({
+  const result = await commitContentChanges({
     message: `feat(works): 新建作品 ${title} (${slug})`,
     upserts: [{ path: `content/works/${slug}.md`, content: md }]
   })
 
-  return { ...meta, process: body.process || '' } as Work
+  return {
+    ...(meta as Work),
+    process: body.process || '',
+    sync: {
+      localOnly: result.localOnly,
+      commitSha: result.sha || '',
+      commitHtmlUrl: result.commitHtmlUrl || '',
+      actionsRunUrl: result.actionsRunUrl || '',
+      savedAt: new Date().toISOString()
+    }
+  } as Work & Record<string, any>
 })

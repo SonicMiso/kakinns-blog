@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { CATEGORIES } from '~/types'
 import { generateSlug } from '~/utils/format'
+import SyncStatusChip from '~/components/admin/SyncStatusChip.vue'
+import { writeLastPushed } from '~/composables/useLastPushed'
 
 definePageMeta({
   layout: false
@@ -38,7 +40,7 @@ async function handleCreate() {
   }
   saving.value = true
   try {
-    const work = await $fetch('/api/admin/works', {
+    const work = await $fetch<any>('/api/admin/works', {
       method: 'POST',
       body: {
         ...form.value,
@@ -47,6 +49,7 @@ async function handleCreate() {
         gallery: form.value.gallery.split('\n').filter(g => g.trim())
       }
     })
+    writeLastPushed(work?.sync, { scope: 'works', description: `新建作品 ${work?.title || form.value.title}` })
     alert('创建成功')
     await navigateTo(`/admin/works/${work.slug}`)
   } catch (e) {
@@ -73,9 +76,12 @@ useHead({
           <NuxtLink to="/admin/works" class="back-link">← 返回列表</NuxtLink>
           <h1 class="page-title">新建作品</h1>
         </div>
-        <button class="btn-save" @click="handleCreate" :disabled="saving">
-          {{ saving ? '创建中...' : '创建' }}
-        </button>
+        <div class="header-actions">
+          <SyncStatusChip size="sm" scope-hint="作品内容同步状态" />
+          <button class="btn-save" @click="handleCreate" :disabled="saving">
+            {{ saving ? '创建中...' : '创建' }}
+          </button>
+        </div>
       </header>
 
       <div class="form-container">
@@ -170,6 +176,12 @@ useHead({
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: var(--space-6);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .back-link {

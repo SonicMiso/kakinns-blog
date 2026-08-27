@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Work } from '~/types'
 import { formatDate, getCategoryLabel } from '~/utils/format'
+import SyncStatusChip from '~/components/admin/SyncStatusChip.vue'
+import { writeLastPushed } from '~/composables/useLastPushed'
 
 definePageMeta({
   layout: false
@@ -28,19 +30,26 @@ const { data: worksData, refresh } = await useAsyncData('admin-works', () => {
 async function handleDelete(slug: string) {
   if (!confirm('确定要删除这个作品吗？')) return
   try {
-    await $fetch(`/api/admin/works/${slug}`, { method: 'DELETE' })
+    const res = await $fetch<any>(`/api/admin/works/${slug}`, { method: 'DELETE' })
+    writeLastPushed(res?.sync, { scope: 'works', description: `删除作品 ${slug}` })
     await refresh()
   } catch (e) {
     alert('删除失败')
   }
 }
 
-function toggleStatus(work: Work) {
+async function toggleStatus(work: Work) {
   const newStatus = work.status === 'published' ? 'draft' : 'published'
-  $fetch(`/api/admin/works/${work.slug}`, {
-    method: 'PUT',
-    body: { status: newStatus }
-  }).then(() => refresh())
+  try {
+    const res = await $fetch<any>(`/api/admin/works/${work.slug}`, {
+      method: 'PUT',
+      body: { status: newStatus }
+    })
+    writeLastPushed(res?.sync, { scope: 'works', description: `切换状态 ${work.slug} -> ${newStatus}` })
+    await refresh()
+  } catch {
+    alert('状态更新失败')
+  }
 }
 
 watch([page, statusFilter], () => {
@@ -60,7 +69,10 @@ useHead({
           <h1 class="page-title">作品管理</h1>
           <p class="page-desc">管理所有作品内容</p>
         </div>
-        <NuxtLink to="/admin/works/new" class="btn-primary">新建作品</NuxtLink>
+        <div class="header-actions">
+          <SyncStatusChip size="sm" scope-hint="作品内容同步状态" />
+          <NuxtLink to="/admin/works/new" class="btn-primary">新建作品</NuxtLink>
+        </div>
       </header>
 
       <div class="filter-bar">
@@ -152,6 +164,12 @@ useHead({
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: var(--space-6);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .page-title {

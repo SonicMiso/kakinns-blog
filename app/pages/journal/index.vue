@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import type { Journal } from '~/types'
-
-const { data: journalsList } = await useAsyncData(
-  'journal-list',
-  () => queryCollection<Journal>('journal').where('status', '=', 'published').order('date', 'DESC').limit(20).all(),
-  { default: () => [] as Journal[] }
-)
-const journalsData = computed(() => ({
-  items: journalsList.value || [],
-  total: (journalsList.value || []).length
-}))
+const journals = await queryCollection('journal')
+  .where('status', '=', 'published')
+  .order('date', 'DESC')
+  .limit(20)
+  .all()
 
 useHead({
   title: '日志 — Kakin Studio'
@@ -30,8 +24,8 @@ useHead({
         </section>
 
         <section class="journal-section section">
-          <div v-if="journalsData.items.length > 0" class="journal-list">
-            <JournalCard v-for="journal in journalsData.items" :key="journal.slug" :journal="journal" />
+          <div v-if="journals.length > 0" class="journal-list">
+            <JournalCard v-for="journal in journals" :key="journal.slug" :journal="journal" />
           </div>
           <div v-else class="empty-state">
             <p>暂无日志</p>
@@ -48,15 +42,8 @@ useHead({
   padding-bottom: var(--space-8);
   text-align: center;
 }
-
-.page-eyebrow {
-  margin-bottom: var(--space-3);
-}
-
-.page-title {
-  margin-bottom: var(--space-4);
-}
-
+.page-eyebrow { margin-bottom: var(--space-3); }
+.page-title { margin-bottom: var(--space-4); }
 .page-desc {
   color: var(--color-text-muted);
   font-size: 1rem;
@@ -64,31 +51,19 @@ useHead({
   max-width: 480px;
   margin: 0 auto;
 }
-
-.journal-section {
-  padding-top: var(--space-4);
-}
-
-.journal-list {
-  display: flex;
-  flex-direction: column;
-}
-
+.journal-section { padding-top: var(--space-4); }
+.journal-list { display: flex; flex-direction: column; }
 .empty-state {
   text-align: center;
   padding: var(--space-16) 0;
   color: var(--color-text-muted);
 }
-
 @media (max-width: 768px) {
   .page-header {
     padding-top: var(--space-12);
     padding-bottom: var(--space-6);
     text-align: left;
   }
-
-  .page-desc {
-    margin: 0;
-  }
+  .page-desc { margin: 0; }
 }
 </style>

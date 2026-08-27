@@ -9,9 +9,18 @@ export default defineEventHandler(async (event) => {
   const work = matches[0] as any
   if (!work) throw createError({ statusCode: 404, statusMessage: 'Work not found' })
 
-  await commitContentChanges({
+  const result = await commitContentChanges({
     message: `delete(works): 删除作品 ${work.title} (${work.slug})`,
     deletes: [{ path: `content/works/${work.slug}.md` }]
   })
-  return { success: true }
+  return {
+    success: true,
+    sync: {
+      localOnly: result.localOnly,
+      commitSha: result.sha || '',
+      commitHtmlUrl: result.commitHtmlUrl || '',
+      actionsRunUrl: result.actionsRunUrl || '',
+      savedAt: new Date().toISOString()
+    }
+  }
 })
