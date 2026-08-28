@@ -80,6 +80,38 @@ jobs:
             -o dist/${{ env.IMAGE_NAME }}-prod.tar
           ls -lh dist/${{ env.IMAGE_NAME }}-prod.tar
 
+      - name: Prepare runtime environment
+        if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          : > dist/runtime.env
+          printf 'NODE_ENV=production\n' >> dist/runtime.env
+
+          # Optional admin secrets: when absent, docker-compose keeps its
+          # project defaults (admin/admin). When present, they override them.
+          if [ -n "${ADMIN_USERNAME:-}" ]; then
+            printf 'NUXT_ADMIN_USERNAME=%s\n' "$ADMIN_USERNAME" >> dist/runtime.env
+          fi
+          if [ -n "${ADMIN_PASSWORD:-}" ]; then
+            printf 'NUXT_ADMIN_PASSWORD=%s\n' "$ADMIN_PASSWORD" >> dist/runtime.env
+          fi
+
+          printf 'NUXT_SESSION_SECRET=%s\n' "$SESSION_SECRET" >> dist/runtime.env
+          printf 'NUXT_GITHUB_TOKEN=%s\n' "$APP_GITHUB_TOKEN" >> dist/runtime.env
+          printf 'NUXT_GITHUB_OWNER=%s\n' "$APP_GITHUB_OWNER" >> dist/runtime.env
+          printf 'NUXT_GITHUB_REPO=%s\n' "$APP_GITHUB_REPO" >> dist/runtime.env
+          printf 'NUXT_GITHUB_BRANCH=%s\n' "${APP_GITHUB_BRANCH:-master}" >> dist/runtime.env
+          printf 'NUXT_GITHUB_COMMITTER_NAME=%s\n' "${APP_GITHUB_COMMITTER_NAME:-Kakin Studio Bot}" >> dist/runtime.env
+          printf 'NUXT_GITHUB_COMMITTER_EMAIL=%s\n' "${APP_GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}" >> dist/runtime.env
+          printf 'NUXT_GITHUB_BASE_URL=%s\n' "$APP_GITHUB_API_BASE" >> dist/runtime.env
+          printf 'NUXT_PUBLIC_SITE_URL=%s\n' "$PUBLIC_SITE_URL" >> dist/runtime.env
+          printf 'NUXT_PUBLIC_SITE_COMMIT_SHA=%s\n' '${{ github.sha }}' >> dist/runtime.env
+          printf 'NUXT_PUBLIC_SITE_BUILD_TIME=%s\n' '${{ github.run_started_at }}' >> dist/runtime.env
+
+          test -s dist/runtime.env
+
       - name: Copy image tarball to VPS
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/scp-action@v1.0.0
@@ -91,53 +123,36 @@ jobs:
           source: dist/${{ env.IMAGE_NAME }}-prod.tar
           target: /tmp
 
-      - name: Deploy via SSH
+      - name: Copy runtime environment to VPS
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
-        uses: appleboy/ssh-action@v1.2.0
-        env:
-          NUXT_ADMIN_USERNAME: ${{ env.ADMIN_USERNAME }}
-          NUXT_ADMIN_PASSWORD: ${{ env.ADMIN_PASSWORD }}
-          NUXT_SESSION_SECRET: ${{ env.SESSION_SECRET }}
-          NUXT_GITHUB_TOKEN: ${{ env.APP_GITHUB_TOKEN }}
-          NUXT_GITHUB_OWNER: ${{ env.APP_GITHUB_OWNER }}
-          NUXT_GITHUB_REPO: ${{ env.APP_GITHUB_REPO }}
-          NUXT_GITHUB_BRANCH: ${{ env.APP_GITHUB_BRANCH }}
-          NUXT_GITHUB_COMMITTER_NAME: ${{ env.APP_GITHUB_COMMITTER_NAME }}
-          NUXT_GITHUB_COMMITTER_EMAIL: ${{ env.APP_GITHUB_COMMITTER_EMAIL }}
-          NUXT_GITHUB_BASE_URL: ${{ env.APP_GITHUB_API_BASE }}
-          NUXT_PUBLIC_SITE_URL: ${{ env.PUBLIC_SITE_URL }}
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ env.DEPLOY_HOST }}
           username: ${{ env.DEPLOY_USER }}
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
-          envs: NUXT_ADMIN_USERNAME,NUXT_ADMIN_PASSWORD,NUXT_SESSION_SECRET,NUXT_GITHUB_TOKEN,NUXT_GITHUB_OWNER,NUXT_GITHUB_REPO,NUXT_GITHUB_BRANCH,NUXT_GITHUB_COMMITTER_NAME,NUXT_GITHUB_COMMITTER_EMAIL,NUXT_GITHUB_BASE_URL,NUXT_PUBLIC_SITE_URL
+          source: dist/runtime.env
+          target: /tmp
+
+      - name: Deploy via SSH
+        if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ env.DEPLOY_SSH_KEY }}
+          port: ${{ env.DEPLOY_PORT }}
           script: |
             set -euo pipefail
             DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
             TAR_PATH="/tmp/${{ env.IMAGE_NAME }}-prod.tar"
+            RUNTIME_ENV_PATH="/tmp/runtime.env"
 
             mkdir -p "${DEPLOY_DIR}"
             umask 077
-            {
-              printf 'NODE_ENV=production\n'
-              printf 'NUXT_ADMIN_USERNAME=%s\n' "$NUXT_ADMIN_USERNAME"
-              printf 'NUXT_ADMIN_PASSWORD=%s\n' "$NUXT_ADMIN_PASSWORD"
-              printf 'NUXT_SESSION_SECRET=%s\n' "$NUXT_SESSION_SECRET"
-              printf 'NUXT_GITHUB_TOKEN=%s\n' "$NUXT_GITHUB_TOKEN"
-              printf 'NUXT_GITHUB_OWNER=%s\n' "$NUXT_GITHUB_OWNER"
-              printf 'NUXT_GITHUB_REPO=%s\n' "$NUXT_GITHUB_REPO"
-              printf 'NUXT_GITHUB_BRANCH=%s\n' "${NUXT_GITHUB_BRANCH:-master}"
-              printf 'NUXT_GITHUB_COMMITTER_NAME=%s\n' "${NUXT_GITHUB_COMMITTER_NAME:-Kakin Studio Bot}"
-              printf 'NUXT_GITHUB_COMMITTER_EMAIL=%s\n' "${NUXT_GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}"
-              printf 'NUXT_GITHUB_BASE_URL=%s\n' "$NUXT_GITHUB_BASE_URL"
-              printf 'NUXT_PUBLIC_SITE_URL=%s\n' "$NUXT_PUBLIC_SITE_URL"
-              printf 'NUXT_PUBLIC_SITE_COMMIT_SHA=%s\n' '${{ github.sha }}'
-              printf 'NUXT_PUBLIC_SITE_BUILD_TIME=%s\n' '${{ github.run_started_at }}'
-            } > "${DEPLOY_DIR}/.env.production"
-
-            test -s "${DEPLOY_DIR}/.env.production"
+            test -s "${RUNTIME_ENV_PATH}"
             test -f "${TAR_PATH}"
+            install -m 600 "${RUNTIME_ENV_PATH}" "${DEPLOY_DIR}/.env.production"
 
             cd "${DEPLOY_DIR}"
             docker load -i "${TAR_PATH}"
@@ -150,7 +165,6 @@ jobs:
 
             docker compose --env-file "${DEPLOY_DIR}/.env.production" up -d --force-recreate
 
-            # Do not print secret values. Only verify that required variables exist in the container.
             docker compose exec -T kakins-blog node -e '
               const required = [
                 "NUXT_ADMIN_USERNAME",
@@ -185,7 +199,7 @@ jobs:
               exit 1
             fi
 
-      - name: Cleanup remote image tarball
+      - name: Cleanup remote deployment files
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -194,7 +208,7 @@ jobs:
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
           script: |
-            rm -f "/tmp/${{ env.IMAGE_NAME }}-prod.tar" /tmp/kakins-blog-compose-config.yml
+            rm -f "/tmp/${{ env.IMAGE_NAME }}-prod.tar" /tmp/runtime.env /tmp/kakins-blog-compose-config.yml
 
       - name: Login to GHCR fallback
         if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
