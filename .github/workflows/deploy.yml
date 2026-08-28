@@ -85,7 +85,7 @@ jobs:
             -o dist/${{ env.IMAGE_NAME }}-prod.tar
           ls -lh dist/${{ env.IMAGE_NAME }}-prod.tar
 
-      - name: Copy image tarball to VPS
+      - name: Copy deployment files to VPS
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/scp-action@v1.0.0
         with:
@@ -93,8 +93,8 @@ jobs:
           username: ${{ env.DEPLOY_USER }}
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
-          source: dist/${{ env.IMAGE_NAME }}-prod.tar
-          target: /tmp
+          source: "dist/${{ env.IMAGE_NAME }}-prod.tar,docker-compose.yml"
+          target: /tmp/kakins-blog-deploy
 
       - name: Deploy via SSH
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
@@ -106,10 +106,18 @@ jobs:
           port: ${{ env.DEPLOY_PORT }}
           script: |
             set -e
+
             DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
-            TAR_PATH="/tmp/${{ env.IMAGE_NAME }}-prod.tar"
+            STAGING_DIR="/tmp/kakins-blog-deploy"
+            TAR_PATH="${STAGING_DIR}/dist/${{ env.IMAGE_NAME }}-prod.tar"
 
             mkdir -p "${DEPLOY_DIR}"
+            test -f "${TAR_PATH}"
+            test -f "${STAGING_DIR}/docker-compose.yml"
+
+            # Always deploy the Compose file together with the image so the
+            # VPS cannot keep using an outdated environment mapping.
+            cp "${STAGING_DIR}/docker-compose.yml" "${DEPLOY_DIR}/docker-compose.yml"
 
             cat > "${DEPLOY_DIR}/.env.production" <<EOF
             NODE_ENV=production
@@ -128,13 +136,8 @@ jobs:
             NUXT_PUBLIC_SITE_BUILD_TIME=${{ github.run_started_at }}
             EOF
 
-            if [ ! -f "${TAR_PATH}" ]; then
-              TAR_PATH="$(find /tmp "${DEPLOY_DIR}" -maxdepth 4 -type f -name "${{ env.IMAGE_NAME }}-prod.tar" | head -n 1 || true)"
-            fi
-
-            test -n "${TAR_PATH}" && test -f "${TAR_PATH}"
-
             cd "${DEPLOY_DIR}"
+
             docker load -i "${TAR_PATH}"
             docker tag "${{ env.IMAGE_NAME }}:prod-${{ github.sha }}" "${{ env.IMAGE_NAME }}:latest"
 
@@ -161,7 +164,7 @@ jobs:
               exit 1
             fi
 
-      - name: Cleanup remote image tarball
+      - name: Cleanup remote deployment files
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -170,7 +173,7 @@ jobs:
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
           script: |
-            rm -f "/tmp/${{ env.IMAGE_NAME }}-prod.tar" "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar"
+            rm -rf /tmp/kakins-blog-deploy
 
       - name: Login to GHCR fallback
         if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
