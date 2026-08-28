@@ -57,12 +57,12 @@ export default defineEventHandler((event) => {
   }
 
   const directGitEnv = {
-    NUXT_GITHUB_TOKEN: process.env.NUXT_GITHUB_TOKEN || '',
-    GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
-    NUXT_GITHUB_OWNER: process.env.NUXT_GITHUB_OWNER || '',
-    GITHUB_OWNER: process.env.GITHUB_OWNER || '',
-    NUXT_GITHUB_REPO: process.env.NUXT_GITHUB_REPO || '',
-    GITHUB_REPO: process.env.GITHUB_REPO || ''
+    NUXT_GITHUB_TOKEN: maskValue(process.env.NUXT_GITHUB_TOKEN),
+    GITHUB_TOKEN: maskValue(process.env.GITHUB_TOKEN),
+    NUXT_GITHUB_OWNER: maskValue(process.env.NUXT_GITHUB_OWNER),
+    GITHUB_OWNER: maskValue(process.env.GITHUB_OWNER),
+    NUXT_GITHUB_REPO: maskValue(process.env.NUXT_GITHUB_REPO),
+    GITHUB_REPO: maskValue(process.env.GITHUB_REPO)
   }
 
   return {
