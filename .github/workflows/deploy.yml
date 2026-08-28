@@ -89,8 +89,9 @@ jobs:
           : > dist/runtime.env
           printf 'NODE_ENV=production\n' >> dist/runtime.env
 
-          # Optional admin secrets: when absent, docker-compose keeps its
-          # project defaults (admin/admin). When present, they override them.
+          # ADMIN_USERNAME / ADMIN_PASSWORD are optional.
+          # When the secrets are absent, docker-compose.yml keeps its
+          # project defaults: admin / admin.
           if [ -n "${ADMIN_USERNAME:-}" ]; then
             printf 'NUXT_ADMIN_USERNAME=%s\n' "$ADMIN_USERNAME" >> dist/runtime.env
           fi
@@ -143,15 +144,18 @@ jobs:
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
           script: |
-            set -euo pipefail
+            set -eu
+            echo "Starting kakins-blog deployment..."
+
             DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
             TAR_PATH="/tmp/${{ env.IMAGE_NAME }}-prod.tar"
             RUNTIME_ENV_PATH="/tmp/runtime.env"
 
             mkdir -p "${DEPLOY_DIR}"
-            umask 077
-            test -s "${RUNTIME_ENV_PATH}"
             test -f "${TAR_PATH}"
+            test -s "${RUNTIME_ENV_PATH}"
+
+            umask 077
             install -m 600 "${RUNTIME_ENV_PATH}" "${DEPLOY_DIR}/.env.production"
 
             cd "${DEPLOY_DIR}"
@@ -182,6 +186,8 @@ jobs:
               console.log("Container NUXT_* environment injection: OK");
             '
 
+            docker compose ps
+
             CODE="000"
             for i in 1 2 3 4 5 6 7 8 9 10; do
               CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ || true)
@@ -192,12 +198,15 @@ jobs:
               fi
               sleep 5
             done
+
             if [ "${CODE}" != "200" ]; then
               echo "Health check failed."
               docker compose ps
               docker compose logs --tail=100
               exit 1
             fi
+
+            echo "Deployment successful."
 
       - name: Cleanup remote deployment files
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
