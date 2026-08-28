@@ -68,7 +68,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: '需要先登录后台管理' })
   }
 
-  const { public: pubCfg, github: githubCfg } = useRuntimeConfig(event) as any
+  const cfg = useRuntimeConfig(event) as any
+  const pubCfg = cfg.public
   const sinceShaRaw = String(getQuery(event).sinceSha || '').trim()
   const sinceSha = sinceShaRaw
   const sinceSavedAt = String(getQuery(event).sinceSavedAt || '').trim() || null
@@ -140,9 +141,9 @@ export default defineEventHandler(async (event) => {
 
   if (ghConfigured) {
     const octo = getOctokitSafe()
-    const owner = String(githubCfg.owner || '')
-    const repo = String(githubCfg.repo || '')
-    const branch = String(githubCfg.branch || 'master')
+    const owner = String(cfg.githubOwner || '')
+    const repo = String(cfg.githubRepo || '')
+    const branch = String(cfg.githubBranch || 'master')
 
     // a. 确认 sinceSha 已经在远端分支上（防止本地 push 失败但以为在同步中）
     let pushed = await isAncestorOrSame({

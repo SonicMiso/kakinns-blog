@@ -62,15 +62,14 @@ export default defineEventHandler((event) => {
       adminUsername: maskValue(cfg?.adminUsername),
       adminPassword: maskValue(cfg?.adminPassword),
       sessionSecret: maskValue(cfg?.sessionSecret),
-      github: {
-        token: maskValue(cfg?.github?.token),
-        owner: maskValue(cfg?.github?.owner),
-        repo: maskValue(cfg?.github?.repo),
-        branch: cfg?.github?.branch || '',
-        committerName: cfg?.github?.committerName || '',
-        committerEmail: cfg?.github?.committerEmail || '',
-        baseUrl: cfg?.github?.baseUrl || ''
-      },
+      githubToken: maskValue(cfg?.githubToken),
+      githubOwner: maskValue(cfg?.githubOwner),
+      githubRepo: maskValue(cfg?.githubRepo),
+      githubBranch: cfg?.githubBranch || '',
+      githubCommitterName: cfg?.githubCommitterName || '',
+      githubCommitterEmail: cfg?.githubCommitterEmail || '',
+      githubBaseUrl: cfg?.githubBaseUrl || '',
+      testenv: cfg?.testenv || '',
       public: {
         siteName: cfg?.public?.siteName || '',
         siteUrl: cfg?.public?.siteUrl || ''
@@ -78,9 +77,9 @@ export default defineEventHandler((event) => {
     },
     env: runtimeEnv,
     checks: {
-      nuxtGithubTokenInjected: !!cfg?.github?.token,
-      nuxtGithubOwnerInjected: !!cfg?.github?.owner,
-      nuxtGithubRepoInjected: !!cfg?.github?.repo,
+      nuxtGithubTokenInjected: !!cfg?.githubToken,
+      nuxtGithubOwnerInjected: !!cfg?.githubOwner,
+      nuxtGithubRepoInjected: !!cfg?.githubRepo,
       githubSourceEnvPresent: !!(process.env.NUXT_GITHUB_TOKEN || process.env.GITHUB_TOKEN),
       configSource: 'nuxt runtimeConfig + process.env'
     }

@@ -15,14 +15,14 @@ interface DeleteFile {
 }
 
 function getOctokit() {
-  const { github } = useRuntimeConfig() as any
+  const cfg = useRuntimeConfig() as any
   // 国内服务器访问 api.github.com 会卡顿/超时：支持通过自建代理或 ghproxy 反代
   // 在 nuxt runtime env（NUXT_GITHUB_BASE_URL）或部署 env 源变量（GITHUB_API_BASE）里填入，例如：
   //   https://ghproxy.com/https://api.github.com   （公开代理，免费但可能限流）
   //   https://你的自建fastgithub域名/api            （自建 fastgithub/mirrorkhanh 反代）
-  const baseUrl = github.baseUrl || process.env.NUXT_GITHUB_BASE_URL || process.env.GITHUB_API_BASE || undefined
+  const baseUrl = cfg.githubBaseUrl || process.env.NUXT_GITHUB_BASE_URL || process.env.GITHUB_API_BASE || undefined
   return new Octokit({
-    auth: github.token,
+    auth: cfg.githubToken,
     baseUrl,
     // 国内链路稳定性：放宽超时 + 重试
     request: { fetch: undefined, timeout: 30_000 }
@@ -30,15 +30,23 @@ function getOctokit() {
 }
 
 function assertConfig() {
-  const { github } = useRuntimeConfig()
-  if (!github.token || !github.owner || !github.repo) {
+  const cfg = useRuntimeConfig() as any
+  if (!cfg.githubToken || !cfg.githubOwner || !cfg.githubRepo) {
     throw createError({
       statusCode: 500,
       statusMessage:
         '缺少 GitHub 配置：请设置 NUXT_GITHUB_TOKEN / NUXT_GITHUB_OWNER / NUXT_GITHUB_REPO（或在 compose 中映射对应源变量）。本地开发可跳过，直接写本地 content/ 目录。'
     })
   }
-  return github
+  return {
+    token: cfg.githubToken,
+    owner: cfg.githubOwner,
+    repo: cfg.githubRepo,
+    branch: cfg.githubBranch || 'master',
+    committerName: cfg.githubCommitterName || 'Kakin Studio Bot',
+    committerEmail: cfg.githubCommitterEmail || 'bot@kakin.studio',
+    baseUrl: cfg.githubBaseUrl || ''
+  }
 }
 
 function isConfigured() {

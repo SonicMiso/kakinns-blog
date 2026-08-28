@@ -42,15 +42,13 @@ export default defineNuxtConfig({
     adminUsername: process.env.NUXT_ADMIN_USERNAME || 'admin',
     adminPassword: process.env.NUXT_ADMIN_PASSWORD || 'admin',
     sessionSecret: process.env.NUXT_SESSION_SECRET || 'kakin-studio-secret-key-please-change',
-    github: {
-      token: process.env.NUXT_GITHUB_TOKEN || '',
-      owner: process.env.NUXT_GITHUB_OWNER || '',
-      repo: process.env.NUXT_GITHUB_REPO || '',
-      branch: process.env.NUXT_GITHUB_BRANCH || 'master',
-      committerName: process.env.NUXT_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot',
-      committerEmail: process.env.NUXT_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio',
-      baseUrl: process.env.NUXT_GITHUB_API_BASE || ''
-    },
+    githubToken: process.env.NUXT_GITHUB_TOKEN || '',
+    githubOwner: process.env.NUXT_GITHUB_OWNER || '',
+    githubRepo: process.env.NUXT_GITHUB_REPO || '',
+    githubBranch: process.env.NUXT_GITHUB_BRANCH || 'master',
+    githubCommitterName: process.env.NUXT_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot',
+    githubCommitterEmail: process.env.NUXT_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio',
+    githubBaseUrl: process.env.NUXT_GITHUB_BASE_URL || process.env.NUXT_GITHUB_API_BASE || '',
     testenv: '',
     public: {
       siteName: 'Kakin Studio',
