@@ -22,12 +22,12 @@ jobs:
       APP_GITHUB_TOKEN: ${{ secrets.APP_GITHUB_TOKEN }}
       APP_GITHUB_OWNER: ${{ secrets.APP_GITHUB_OWNER }}
       APP_GITHUB_REPO: ${{ secrets.APP_GITHUB_REPO }}
-      APP_GITHUB_BRANCH: ${{ secrets.APP_GITHUB_BRANCH || 'master' }}
-      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || 'admin' }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'admin' }}
-      SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'please-change-this' }}
-      APP_GITHUB_COMMITTER_NAME: ${{ secrets.APP_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot' }}
-      APP_GITHUB_COMMITTER_EMAIL: ${{ secrets.APP_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio' }}
+      APP_GITHUB_BRANCH: ${{ secrets.APP_GITHUB_BRANCH }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      APP_GITHUB_COMMITTER_NAME: ${{ secrets.APP_GITHUB_COMMITTER_NAME }}
+      APP_GITHUB_COMMITTER_EMAIL: ${{ secrets.APP_GITHUB_COMMITTER_EMAIL }}
       APP_GITHUB_API_BASE: ${{ secrets.APP_GITHUB_API_BASE }}
       PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
 
@@ -118,45 +118,39 @@ jobs:
             TAR_PATH="/tmp/${{ env.IMAGE_NAME }}-prod.tar"
 
             mkdir -p "${DEPLOY_DIR}"
-
-            # Persist the same NUXT_* names that Nuxt runtimeConfig consumes.
-            # Quoting keeps spaces and shell metacharacters from being interpreted.
             umask 077
-            cat > "${DEPLOY_DIR}/.env.production" <<EOF
-NODE_ENV=production
-NUXT_ADMIN_USERNAME=${NUXT_ADMIN_USERNAME}
-NUXT_ADMIN_PASSWORD=${NUXT_ADMIN_PASSWORD}
-NUXT_SESSION_SECRET=${NUXT_SESSION_SECRET}
-NUXT_GITHUB_TOKEN=${NUXT_GITHUB_TOKEN}
-NUXT_GITHUB_OWNER=${NUXT_GITHUB_OWNER}
-NUXT_GITHUB_REPO=${NUXT_GITHUB_REPO}
-NUXT_GITHUB_BRANCH=${NUXT_GITHUB_BRANCH}
-NUXT_GITHUB_COMMITTER_NAME=${NUXT_GITHUB_COMMITTER_NAME}
-NUXT_GITHUB_COMMITTER_EMAIL=${NUXT_GITHUB_COMMITTER_EMAIL}
-NUXT_GITHUB_BASE_URL=${NUXT_GITHUB_BASE_URL}
-NUXT_PUBLIC_SITE_URL=${NUXT_PUBLIC_SITE_URL}
-NUXT_PUBLIC_SITE_COMMIT_SHA=${{ github.sha }}
-NUXT_PUBLIC_SITE_BUILD_TIME=${{ github.run_started_at }}
-EOF
+            {
+              printf 'NODE_ENV=production\n'
+              printf 'NUXT_ADMIN_USERNAME=%s\n' "$NUXT_ADMIN_USERNAME"
+              printf 'NUXT_ADMIN_PASSWORD=%s\n' "$NUXT_ADMIN_PASSWORD"
+              printf 'NUXT_SESSION_SECRET=%s\n' "$NUXT_SESSION_SECRET"
+              printf 'NUXT_GITHUB_TOKEN=%s\n' "$NUXT_GITHUB_TOKEN"
+              printf 'NUXT_GITHUB_OWNER=%s\n' "$NUXT_GITHUB_OWNER"
+              printf 'NUXT_GITHUB_REPO=%s\n' "$NUXT_GITHUB_REPO"
+              printf 'NUXT_GITHUB_BRANCH=%s\n' "${NUXT_GITHUB_BRANCH:-master}"
+              printf 'NUXT_GITHUB_COMMITTER_NAME=%s\n' "${NUXT_GITHUB_COMMITTER_NAME:-Kakin Studio Bot}"
+              printf 'NUXT_GITHUB_COMMITTER_EMAIL=%s\n' "${NUXT_GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}"
+              printf 'NUXT_GITHUB_BASE_URL=%s\n' "$NUXT_GITHUB_BASE_URL"
+              printf 'NUXT_PUBLIC_SITE_URL=%s\n' "$NUXT_PUBLIC_SITE_URL"
+              printf 'NUXT_PUBLIC_SITE_COMMIT_SHA=%s\n' '${{ github.sha }}'
+              printf 'NUXT_PUBLIC_SITE_BUILD_TIME=%s\n' '${{ github.run_started_at }}'
+            } > "${DEPLOY_DIR}/.env.production"
 
-            test -f "${TAR_PATH}"
             test -s "${DEPLOY_DIR}/.env.production"
+            test -f "${TAR_PATH}"
 
             cd "${DEPLOY_DIR}"
             docker load -i "${TAR_PATH}"
             docker tag "${{ env.IMAGE_NAME }}:prod-${{ github.sha }}" "${{ env.IMAGE_NAME }}:latest"
 
-            # Resolve the exact environment that Compose will pass to the container.
             docker compose --env-file "${DEPLOY_DIR}/.env.production" config >/tmp/kakins-blog-compose-config.yml
             grep -q 'NUXT_GITHUB_TOKEN:' /tmp/kakins-blog-compose-config.yml
             grep -q 'NUXT_GITHUB_OWNER:' /tmp/kakins-blog-compose-config.yml
             grep -q 'NUXT_GITHUB_REPO:' /tmp/kakins-blog-compose-config.yml
 
             docker compose --env-file "${DEPLOY_DIR}/.env.production" up -d --force-recreate
-            sleep 3
-            docker compose ps
 
-            # Verify the container received the variables without printing secret values.
+            # Do not print secret values. Only verify that required variables exist in the container.
             docker compose exec -T kakins-blog node -e '
               const required = [
                 "NUXT_ADMIN_USERNAME",
@@ -164,12 +158,11 @@ EOF
                 "NUXT_SESSION_SECRET",
                 "NUXT_GITHUB_TOKEN",
                 "NUXT_GITHUB_OWNER",
-                "NUXT_GITHUB_REPO",
-                "NUXT_GITHUB_BRANCH"
+                "NUXT_GITHUB_REPO"
               ];
               const missing = required.filter((key) => !String(process.env[key] || "").trim());
               if (missing.length) {
-                console.error("Missing container env:", missing.join(", "));
+                console.error(`Missing container env: ${missing.join(", ")}`);
                 process.exit(1);
               }
               console.log("Container NUXT_* environment injection: OK");
@@ -201,7 +194,7 @@ EOF
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
           script: |
-            rm -f "/tmp/${{ env.IMAGE_NAME }}-prod.tar" "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar" /tmp/kakins-blog-compose-config.yml
+            rm -f "/tmp/${{ env.IMAGE_NAME }}-prod.tar" /tmp/kakins-blog-compose-config.yml
 
       - name: Login to GHCR fallback
         if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
