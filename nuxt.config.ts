@@ -1,12 +1,8 @@
-const readRuntimeEnv = (nuxtKey: string, legacyKey?: string, fallback = '') =>
-  process.env[nuxtKey] || process.env[legacyKey || nuxtKey] || fallback
-
 export default defineNuxtConfig({
   modules: ['@nuxt/content'],
   devtools: { enabled: process.env.NODE_ENV !== 'production' },
   compatibilityDate: '2024-04-03',
   srcDir: 'app',
-  css: ['~/assets/css/tokens.css', '~/assets/css/typography.css', '~/assets/css/globals.css'],
   content: {
     experimental: {
       sqliteConnector: 'native'
@@ -41,31 +37,26 @@ export default defineNuxtConfig({
     '/about': { ssr: true, swr: 60 },
     '/admin/**': { ssr: false }
   },
+  // 生产环境的机密配置必须通过 NUXT_* 环境变量在运行时注入。
+  // 不要在这里读取 process.env，否则值会在 build-time 被固化到 .output。
   runtimeConfig: {
-    adminUsername: readRuntimeEnv('NUXT_ADMIN_USERNAME', 'ADMIN_USERNAME', 'admin'),
-    adminPassword: readRuntimeEnv('NUXT_ADMIN_PASSWORD', 'ADMIN_PASSWORD', 'admin'),
-    sessionSecret: readRuntimeEnv('NUXT_SESSION_SECRET', 'SESSION_SECRET', 'kakin-studio-secret-key-please-change'),
-    githubToken: readRuntimeEnv('NUXT_GITHUB_TOKEN', 'GITHUB_TOKEN', ''),
-    githubOwner: readRuntimeEnv('NUXT_GITHUB_OWNER', 'GITHUB_OWNER', ''),
-    githubRepo: readRuntimeEnv('NUXT_GITHUB_REPO', 'GITHUB_REPO', ''),
-    githubBranch: readRuntimeEnv('NUXT_GITHUB_BRANCH', 'GITHUB_BRANCH', 'master'),
-    githubCommitterName: readRuntimeEnv('NUXT_GITHUB_COMMITTER_NAME', 'GITHUB_COMMITTER_NAME', 'Kakin Studio Bot'),
-    githubCommitterEmail: readRuntimeEnv('NUXT_GITHUB_COMMITTER_EMAIL', 'GITHUB_COMMITTER_EMAIL', 'bot@kakin.studio'),
-    githubBaseUrl: readRuntimeEnv('NUXT_GITHUB_BASE_URL', 'NUXT_GITHUB_API_BASE', readRuntimeEnv('GITHUB_API_BASE', '', '')),
+    adminUsername: 'admin',
+    adminPassword: 'admin',
+    sessionSecret: 'kakin-studio-secret-key-please-change',
+    githubToken: '',
+    githubOwner: '',
+    githubRepo: '',
+    githubBranch: 'master',
+    githubCommitterName: 'Kakin Studio Bot',
+    githubCommitterEmail: 'bot@kakin.studio',
+    githubBaseUrl: '',
     testenv: '',
     public: {
       siteName: 'Kakin Studio',
       siteDescription: '手工艺个人工作室',
-      // ===== 主站构建元信息（给后台同步状态芯片用）=====
-      // GitHub Actions / Dockerfile 构建时通过 build-args 注入：
-      //   --build-arg GITHUB_SHA=${{ github.sha }} BUILD_TIME=${{ github.run_started_at }}
-      // 开发模式未配置时，meta API 会 fallback 读本地 `git rev-parse HEAD` 与 Date.now()。
-      siteCommitSha: readRuntimeEnv('NUXT_PUBLIC_SITE_COMMIT_SHA', 'GITHUB_SHA', ''),
-      siteBuildTime: readRuntimeEnv('NUXT_PUBLIC_SITE_BUILD_TIME', 'BUILD_TIME', ''),
-      // 后台 sync-status 接口查询「远端主站 /api/meta」时用的 base URL；
-      // 部署时通过环境变量 NUXT_PUBLIC_SITE_URL 指定（例如 http://47.122.106.135:3000）。
-      // 留空 = 使用当前请求的 origin（同域回环），开发模式 & 单站点够用。
-      siteUrl: readRuntimeEnv('NUXT_PUBLIC_SITE_URL', 'PUBLIC_SITE_URL', '')
+      siteCommitSha: '',
+      siteBuildTime: '',
+      siteUrl: ''
     }
   },
   nitro: {}
