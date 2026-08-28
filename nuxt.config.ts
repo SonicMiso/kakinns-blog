@@ -1,3 +1,6 @@
+const readRuntimeEnv = (nuxtKey: string, legacyKey?: string, fallback = '') =>
+  process.env[nuxtKey] || process.env[legacyKey || nuxtKey] || fallback
+
 export default defineNuxtConfig({
   modules: ['@nuxt/content'],
   devtools: { enabled: process.env.NODE_ENV !== 'production' },
@@ -39,16 +42,16 @@ export default defineNuxtConfig({
     '/admin/**': { ssr: false }
   },
   runtimeConfig: {
-    adminUsername: process.env.NUXT_ADMIN_USERNAME || 'admin',
-    adminPassword: process.env.NUXT_ADMIN_PASSWORD || 'admin',
-    sessionSecret: process.env.NUXT_SESSION_SECRET || 'kakin-studio-secret-key-please-change',
-    githubToken: process.env.NUXT_GITHUB_TOKEN || '',
-    githubOwner: process.env.NUXT_GITHUB_OWNER || '',
-    githubRepo: process.env.NUXT_GITHUB_REPO || '',
-    githubBranch: process.env.NUXT_GITHUB_BRANCH || 'master',
-    githubCommitterName: process.env.NUXT_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot',
-    githubCommitterEmail: process.env.NUXT_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio',
-    githubBaseUrl: process.env.NUXT_GITHUB_BASE_URL || process.env.NUXT_GITHUB_API_BASE || '',
+    adminUsername: readRuntimeEnv('NUXT_ADMIN_USERNAME', 'ADMIN_USERNAME', 'admin'),
+    adminPassword: readRuntimeEnv('NUXT_ADMIN_PASSWORD', 'ADMIN_PASSWORD', 'admin'),
+    sessionSecret: readRuntimeEnv('NUXT_SESSION_SECRET', 'SESSION_SECRET', 'kakin-studio-secret-key-please-change'),
+    githubToken: readRuntimeEnv('NUXT_GITHUB_TOKEN', 'GITHUB_TOKEN', ''),
+    githubOwner: readRuntimeEnv('NUXT_GITHUB_OWNER', 'GITHUB_OWNER', ''),
+    githubRepo: readRuntimeEnv('NUXT_GITHUB_REPO', 'GITHUB_REPO', ''),
+    githubBranch: readRuntimeEnv('NUXT_GITHUB_BRANCH', 'GITHUB_BRANCH', 'master'),
+    githubCommitterName: readRuntimeEnv('NUXT_GITHUB_COMMITTER_NAME', 'GITHUB_COMMITTER_NAME', 'Kakin Studio Bot'),
+    githubCommitterEmail: readRuntimeEnv('NUXT_GITHUB_COMMITTER_EMAIL', 'GITHUB_COMMITTER_EMAIL', 'bot@kakin.studio'),
+    githubBaseUrl: readRuntimeEnv('NUXT_GITHUB_BASE_URL', 'NUXT_GITHUB_API_BASE', readRuntimeEnv('GITHUB_API_BASE', '', '')),
     testenv: '',
     public: {
       siteName: 'Kakin Studio',
@@ -57,12 +60,12 @@ export default defineNuxtConfig({
       // GitHub Actions / Dockerfile 构建时通过 build-args 注入：
       //   --build-arg GITHUB_SHA=${{ github.sha }} BUILD_TIME=${{ github.run_started_at }}
       // 开发模式未配置时，meta API 会 fallback 读本地 `git rev-parse HEAD` 与 Date.now()。
-      siteCommitSha: process.env.NUXT_PUBLIC_SITE_COMMIT_SHA || process.env.GITHUB_SHA || '',
-      siteBuildTime: process.env.NUXT_PUBLIC_SITE_BUILD_TIME || process.env.BUILD_TIME || '',
+      siteCommitSha: readRuntimeEnv('NUXT_PUBLIC_SITE_COMMIT_SHA', 'GITHUB_SHA', ''),
+      siteBuildTime: readRuntimeEnv('NUXT_PUBLIC_SITE_BUILD_TIME', 'BUILD_TIME', ''),
       // 后台 sync-status 接口查询「远端主站 /api/meta」时用的 base URL；
       // 部署时通过环境变量 NUXT_PUBLIC_SITE_URL 指定（例如 http://47.122.106.135:3000）。
       // 留空 = 使用当前请求的 origin（同域回环），开发模式 & 单站点够用。
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || ''
+      siteUrl: readRuntimeEnv('NUXT_PUBLIC_SITE_URL', 'PUBLIC_SITE_URL', '')
     }
   },
   nitro: {}

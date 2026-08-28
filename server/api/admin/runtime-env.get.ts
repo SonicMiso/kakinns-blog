@@ -56,6 +56,15 @@ export default defineEventHandler((event) => {
     }
   }
 
+  const directGitEnv = {
+    NUXT_GITHUB_TOKEN: process.env.NUXT_GITHUB_TOKEN || '',
+    GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+    NUXT_GITHUB_OWNER: process.env.NUXT_GITHUB_OWNER || '',
+    GITHUB_OWNER: process.env.GITHUB_OWNER || '',
+    NUXT_GITHUB_REPO: process.env.NUXT_GITHUB_REPO || '',
+    GITHUB_REPO: process.env.GITHUB_REPO || ''
+  }
+
   return {
     ok: true,
     nodeEnv: process.env.NODE_ENV || '',
@@ -77,6 +86,7 @@ export default defineEventHandler((event) => {
       }
     },
     env: runtimeEnv,
+    directGitEnv,
     checks: {
       nuxtGithubTokenInjected: !!cfg?.githubToken,
       nuxtGithubOwnerInjected: !!cfg?.githubOwner,

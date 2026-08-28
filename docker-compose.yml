@@ -13,17 +13,17 @@ services:
       - NUXT_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       - NUXT_SESSION_SECRET=${SESSION_SECRET:-please-change-this}
       # 后台写内容时 commit 回 GitHub（Git-based CMS 核心凭据）
-      - NUXT_GITHUB_TOKEN=${NUXT_GITHUB_TOKEN:-}
-      - NUXT_GITHUB_OWNER=${NUXT_GITHUB_OWNER:-}
-      - NUXT_GITHUB_REPO=${NUXT_GITHUB_REPO:-}
-      - NUXT_GITHUB_BRANCH=${NUXT_GITHUB_BRANCH:-master}
-      - NUXT_GITHUB_COMMITTER_NAME=${NUXT_GITHUB_COMMITTER_NAME:-Kakin Studio Bot}
-      - NUXT_GITHUB_COMMITTER_EMAIL=${NUXT_GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}
+      - NUXT_GITHUB_TOKEN=${NUXT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}
+      - NUXT_GITHUB_OWNER=${NUXT_GITHUB_OWNER:-${GITHUB_OWNER:-}}
+      - NUXT_GITHUB_REPO=${NUXT_GITHUB_REPO:-${GITHUB_REPO:-}}
+      - NUXT_GITHUB_BRANCH=${NUXT_GITHUB_BRANCH:-${GITHUB_BRANCH:-master}}
+      - NUXT_GITHUB_COMMITTER_NAME=${NUXT_GITHUB_COMMITTER_NAME:-${GITHUB_COMMITTER_NAME:-Kakin Studio Bot}}
+      - NUXT_GITHUB_COMMITTER_EMAIL=${NUXT_GITHUB_COMMITTER_EMAIL:-${GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}}
       - NUXT_TEST_ENV=${TEST_ENV:-na}
       # 国内服务器 GitHub API 反代，留空走官方；推荐填下面两种之一
       #   公开 ghproxy：https://ghproxy.com/https://api.github.com
       #   自建 fastgithub：https://<你的fastgithub域名>/api
-      - NUXT_GITHUB_BASE_URL=${NUXT_GITHUB_BASE_URL:-}
+      - NUXT_GITHUB_BASE_URL=${NUXT_GITHUB_BASE_URL:-${GITHUB_API_BASE:-}}
       # 容器内 apk/npm 也走代理（如果你在服务器搭了 clash/v2raya，填 http://宿主机IP:7890）
       - HTTP_PROXY=${HTTP_PROXY:-}
       - HTTPS_PROXY=${HTTPS_PROXY:-}
