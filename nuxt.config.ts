@@ -46,11 +46,12 @@ export default defineNuxtConfig({
       token: process.env.NUXT_GITHUB_TOKEN || '',
       owner: process.env.NUXT_GITHUB_OWNER || '',
       repo: process.env.NUXT_GITHUB_REPO || '',
-      branch: process.env.NUXT_GITHUB_BRANCH || 'main',
+      branch: process.env.NUXT_GITHUB_BRANCH || 'master',
       committerName: process.env.NUXT_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot',
       committerEmail: process.env.NUXT_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio',
       baseUrl: process.env.NUXT_GITHUB_API_BASE || ''
     },
+    testenv: '',
     public: {
       siteName: 'Kakin Studio',
       siteDescription: '手工艺个人工作室',

@@ -19,6 +19,7 @@ services:
       - NUXT_GITHUB_BRANCH=${GITHUB_BRANCH:-master}
       - NUXT_GITHUB_COMMITTER_NAME=${GITHUB_COMMITTER_NAME:-Kakin Studio Bot}
       - NUXT_GITHUB_COMMITTER_EMAIL=${GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}
+      - NUXT_TEST_ENV=${TEST_ENV:-na}
       # 国内服务器 GitHub API 反代，留空走官方；推荐填下面两种之一
       #   公开 ghproxy：https://ghproxy.com/https://api.github.com
       #   自建 fastgithub：https://<你的fastgithub域名>/api

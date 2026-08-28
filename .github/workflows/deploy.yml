@@ -116,6 +116,7 @@ jobs:
             GITHUB_COMMITTER_NAME=${{ env.APP_GITHUB_COMMITTER_NAME }}
             GITHUB_COMMITTER_EMAIL=${{ env.APP_GITHUB_COMMITTER_EMAIL }}
             GITHUB_API_BASE=${{ env.APP_GITHUB_API_BASE }}
+            TEST_ENV=TEST11
             EOF
 
             if [ ! -f "${TAR_PATH}" ]; then
