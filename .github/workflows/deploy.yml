@@ -22,13 +22,14 @@ jobs:
       APP_GITHUB_TOKEN: ${{ secrets.APP_GITHUB_TOKEN }}
       APP_GITHUB_OWNER: ${{ secrets.APP_GITHUB_OWNER }}
       APP_GITHUB_REPO: ${{ secrets.APP_GITHUB_REPO }}
-      APP_GITHUB_BRANCH: ${{ secrets.APP_GITHUB_BRANCH }}
-      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || 'admin3' }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'admin4' }}
+      APP_GITHUB_BRANCH: ${{ secrets.APP_GITHUB_BRANCH || 'master' }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || 'admin' }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'admin' }}
       SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'please-change-this' }}
       APP_GITHUB_COMMITTER_NAME: ${{ secrets.APP_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot' }}
       APP_GITHUB_COMMITTER_EMAIL: ${{ secrets.APP_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio' }}
       APP_GITHUB_API_BASE: ${{ secrets.APP_GITHUB_API_BASE }}
+      PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
 
     steps:
       - name: Checkout
@@ -93,50 +94,87 @@ jobs:
       - name: Deploy via SSH
         if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          NUXT_ADMIN_USERNAME: ${{ env.ADMIN_USERNAME }}
+          NUXT_ADMIN_PASSWORD: ${{ env.ADMIN_PASSWORD }}
+          NUXT_SESSION_SECRET: ${{ env.SESSION_SECRET }}
+          NUXT_GITHUB_TOKEN: ${{ env.APP_GITHUB_TOKEN }}
+          NUXT_GITHUB_OWNER: ${{ env.APP_GITHUB_OWNER }}
+          NUXT_GITHUB_REPO: ${{ env.APP_GITHUB_REPO }}
+          NUXT_GITHUB_BRANCH: ${{ env.APP_GITHUB_BRANCH }}
+          NUXT_GITHUB_COMMITTER_NAME: ${{ env.APP_GITHUB_COMMITTER_NAME }}
+          NUXT_GITHUB_COMMITTER_EMAIL: ${{ env.APP_GITHUB_COMMITTER_EMAIL }}
+          NUXT_GITHUB_BASE_URL: ${{ env.APP_GITHUB_API_BASE }}
+          NUXT_PUBLIC_SITE_URL: ${{ env.PUBLIC_SITE_URL }}
         with:
           host: ${{ env.DEPLOY_HOST }}
           username: ${{ env.DEPLOY_USER }}
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
+          envs: NUXT_ADMIN_USERNAME,NUXT_ADMIN_PASSWORD,NUXT_SESSION_SECRET,NUXT_GITHUB_TOKEN,NUXT_GITHUB_OWNER,NUXT_GITHUB_REPO,NUXT_GITHUB_BRANCH,NUXT_GITHUB_COMMITTER_NAME,NUXT_GITHUB_COMMITTER_EMAIL,NUXT_GITHUB_BASE_URL,NUXT_PUBLIC_SITE_URL
           script: |
-            set -e
+            set -euo pipefail
             DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
             TAR_PATH="/tmp/${{ env.IMAGE_NAME }}-prod.tar"
 
             mkdir -p "${DEPLOY_DIR}"
-            cat > "${DEPLOY_DIR}/.env.production" <<EOF
-            NODE_ENV=production
-            ADMIN_USERNAME=${{ env.ADMIN_USERNAME }}
-            ADMIN_PASSWORD=${{ env.ADMIN_PASSWORD }}
-            SESSION_SECRET=${{ env.SESSION_SECRET }}
-            NUXT_GITHUB_TOKEN=${{ env.APP_GITHUB_TOKEN }}
-            NUXT_GITHUB_OWNER=${{ env.APP_GITHUB_OWNER }}
-            NUXT_GITHUB_REPO=${{ env.APP_GITHUB_REPO }}
-            NUXT_GITHUB_BRANCH=${{ env.APP_GITHUB_BRANCH }}
-            NUXT_GITHUB_COMMITTER_NAME=${{ env.APP_GITHUB_COMMITTER_NAME }}
-            NUXT_GITHUB_COMMITTER_EMAIL=${{ env.APP_GITHUB_COMMITTER_EMAIL }}
-            NUXT_GITHUB_BASE_URL=${{ env.APP_GITHUB_API_BASE }}
-            # legacy mirror (for old scripts/tools)
-            GITHUB_TOKEN=${{ env.APP_GITHUB_TOKEN }}
-            GITHUB_OWNER=${{ env.APP_GITHUB_OWNER }}
-            GITHUB_REPO=${{ env.APP_GITHUB_REPO }}
-            GITHUB_BRANCH=${{ env.APP_GITHUB_BRANCH }}
-            GITHUB_COMMITTER_NAME=${{ env.APP_GITHUB_COMMITTER_NAME }}
-            GITHUB_COMMITTER_EMAIL=${{ env.APP_GITHUB_COMMITTER_EMAIL }}
-            GITHUB_API_BASE=${{ env.APP_GITHUB_API_BASE }}
-            TEST_ENV=TEST11
-            EOF
 
-            if [ ! -f "${TAR_PATH}" ]; then
-              TAR_PATH="$(find /tmp "${DEPLOY_DIR}" -maxdepth 4 -type f -name "${{ env.IMAGE_NAME }}-prod.tar" | head -n 1 || true)"
-            fi
-            test -n "${TAR_PATH}" && test -f "${TAR_PATH}"
+            # Persist the same NUXT_* names that Nuxt runtimeConfig consumes.
+            # Quoting keeps spaces and shell metacharacters from being interpreted.
+            umask 077
+            cat > "${DEPLOY_DIR}/.env.production" <<EOF
+NODE_ENV=production
+NUXT_ADMIN_USERNAME=${NUXT_ADMIN_USERNAME}
+NUXT_ADMIN_PASSWORD=${NUXT_ADMIN_PASSWORD}
+NUXT_SESSION_SECRET=${NUXT_SESSION_SECRET}
+NUXT_GITHUB_TOKEN=${NUXT_GITHUB_TOKEN}
+NUXT_GITHUB_OWNER=${NUXT_GITHUB_OWNER}
+NUXT_GITHUB_REPO=${NUXT_GITHUB_REPO}
+NUXT_GITHUB_BRANCH=${NUXT_GITHUB_BRANCH}
+NUXT_GITHUB_COMMITTER_NAME=${NUXT_GITHUB_COMMITTER_NAME}
+NUXT_GITHUB_COMMITTER_EMAIL=${NUXT_GITHUB_COMMITTER_EMAIL}
+NUXT_GITHUB_BASE_URL=${NUXT_GITHUB_BASE_URL}
+NUXT_PUBLIC_SITE_URL=${NUXT_PUBLIC_SITE_URL}
+NUXT_PUBLIC_SITE_COMMIT_SHA=${{ github.sha }}
+NUXT_PUBLIC_SITE_BUILD_TIME=${{ github.run_started_at }}
+EOF
+
+            test -f "${TAR_PATH}"
+            test -s "${DEPLOY_DIR}/.env.production"
+
             cd "${DEPLOY_DIR}"
             docker load -i "${TAR_PATH}"
             docker tag "${{ env.IMAGE_NAME }}:prod-${{ github.sha }}" "${{ env.IMAGE_NAME }}:latest"
+
+            # Resolve the exact environment that Compose will pass to the container.
+            docker compose --env-file "${DEPLOY_DIR}/.env.production" config >/tmp/kakins-blog-compose-config.yml
+            grep -q 'NUXT_GITHUB_TOKEN:' /tmp/kakins-blog-compose-config.yml
+            grep -q 'NUXT_GITHUB_OWNER:' /tmp/kakins-blog-compose-config.yml
+            grep -q 'NUXT_GITHUB_REPO:' /tmp/kakins-blog-compose-config.yml
+
             docker compose --env-file "${DEPLOY_DIR}/.env.production" up -d --force-recreate
             sleep 3
             docker compose ps
+
+            # Verify the container received the variables without printing secret values.
+            docker compose exec -T kakins-blog node -e '
+              const required = [
+                "NUXT_ADMIN_USERNAME",
+                "NUXT_ADMIN_PASSWORD",
+                "NUXT_SESSION_SECRET",
+                "NUXT_GITHUB_TOKEN",
+                "NUXT_GITHUB_OWNER",
+                "NUXT_GITHUB_REPO",
+                "NUXT_GITHUB_BRANCH"
+              ];
+              const missing = required.filter((key) => !String(process.env[key] || "").trim());
+              if (missing.length) {
+                console.error("Missing container env:", missing.join(", "));
+                process.exit(1);
+              }
+              console.log("Container NUXT_* environment injection: OK");
+            '
+
             CODE="000"
             for i in 1 2 3 4 5 6 7 8 9 10; do
               CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ || true)
@@ -163,7 +201,7 @@ jobs:
           key: ${{ env.DEPLOY_SSH_KEY }}
           port: ${{ env.DEPLOY_PORT }}
           script: |
-            rm -f "/tmp/${{ env.IMAGE_NAME }}-prod.tar" "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar"
+            rm -f "/tmp/${{ env.IMAGE_NAME }}-prod.tar" "${{ env.DEPLOY_PATH }}/${{ env.IMAGE_NAME }}-prod.tar" /tmp/kakins-blog-compose-config.yml
 
       - name: Login to GHCR fallback
         if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
