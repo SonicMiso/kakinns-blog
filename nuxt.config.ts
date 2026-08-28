@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_ENV !== 'production' },
   compatibilityDate: '2024-04-03',
   srcDir: 'app',
+  css: [
+    '~/assets/css/tokens.css',
+    '~/assets/css/globals.css',
+    '~/assets/css/typography.css'
+  ],
   content: {
     experimental: {
       sqliteConnector: 'native'
@@ -37,8 +42,6 @@ export default defineNuxtConfig({
     '/about': { ssr: true, swr: 60 },
     '/admin/**': { ssr: false }
   },
-  // 生产环境的机密配置必须通过 NUXT_* 环境变量在运行时注入。
-  // 不要在这里读取 process.env，否则值会在 build-time 被固化到 .output。
   runtimeConfig: {
     adminUsername: 'admin',
     adminPassword: 'admin',
