@@ -109,6 +109,14 @@ jobs:
             ADMIN_USERNAME=${{ env.ADMIN_USERNAME }}
             ADMIN_PASSWORD=${{ env.ADMIN_PASSWORD }}
             SESSION_SECRET=${{ env.SESSION_SECRET }}
+            NUXT_GITHUB_TOKEN=${{ env.APP_GITHUB_TOKEN }}
+            NUXT_GITHUB_OWNER=${{ env.APP_GITHUB_OWNER }}
+            NUXT_GITHUB_REPO=${{ env.APP_GITHUB_REPO }}
+            NUXT_GITHUB_BRANCH=${{ env.APP_GITHUB_BRANCH }}
+            NUXT_GITHUB_COMMITTER_NAME=${{ env.APP_GITHUB_COMMITTER_NAME }}
+            NUXT_GITHUB_COMMITTER_EMAIL=${{ env.APP_GITHUB_COMMITTER_EMAIL }}
+            NUXT_GITHUB_BASE_URL=${{ env.APP_GITHUB_API_BASE }}
+            # legacy mirror (for old scripts/tools)
             GITHUB_TOKEN=${{ env.APP_GITHUB_TOKEN }}
             GITHUB_OWNER=${{ env.APP_GITHUB_OWNER }}
             GITHUB_REPO=${{ env.APP_GITHUB_REPO }}

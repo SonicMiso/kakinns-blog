@@ -42,7 +42,8 @@ export default defineEventHandler((event) => {
     'GITHUB_OWNER',
     'GITHUB_REPO',
     'GITHUB_BRANCH',
-    'GITHUB_API_BASE'
+    'GITHUB_API_BASE',
+    'TEST_ENV'
   ]
 
   const runtimeEnv: Record<string, any> = {}
