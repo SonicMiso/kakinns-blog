@@ -23,8 +23,8 @@ jobs:
       APP_GITHUB_OWNER: ${{ secrets.APP_GITHUB_OWNER }}
       APP_GITHUB_REPO: ${{ secrets.APP_GITHUB_REPO }}
       APP_GITHUB_BRANCH: ${{ secrets.APP_GITHUB_BRANCH }}
-      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || 'admin' }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'admin' }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || 'admin3' }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'admin4' }}
       SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'please-change-this' }}
       APP_GITHUB_COMMITTER_NAME: ${{ secrets.APP_GITHUB_COMMITTER_NAME || 'Kakin Studio Bot' }}
       APP_GITHUB_COMMITTER_EMAIL: ${{ secrets.APP_GITHUB_COMMITTER_EMAIL || 'bot@kakin.studio' }}

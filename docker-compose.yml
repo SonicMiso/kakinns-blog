@@ -9,8 +9,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NUXT_ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-      - NUXT_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - NUXT_ADMIN_USERNAME=${ADMIN_USERNAME:-admin1}
+      - NUXT_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin2}
       - NUXT_SESSION_SECRET=${SESSION_SECRET:-please-change-this}
       # 后台写内容时 commit 回 GitHub（Git-based CMS 核心凭据）
       - NUXT_GITHUB_TOKEN=${NUXT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}
