@@ -23,6 +23,7 @@ export const collections = {
       excerpt: z.string().default(''),
       materials: z.array(z.string()).default([]),
       tools: z.array(z.string()).default([]),
+      process: z.string().default(''),
       gallery: z.array(z.string()).default([]),
       featured: z.boolean().default(false),
       status: z.enum(['draft', 'published']).default('published')
@@ -39,6 +40,7 @@ export const collections = {
       updatedAt: z.string(),   // 更新时间 ISO8601
       cover: z.string().default(''),
       excerpt: z.string().default(''),
+      content: z.string().default(''),
       status: z.enum(['draft', 'published']).default('published')
     })
   })

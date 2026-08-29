@@ -1,30 +1,30 @@
 export interface Work {
-  id: number
+  id?: number
   title: string
   slug: string
   date: string
   category: string
-  cover: string
-  excerpt: string
-  materials: string[]
-  tools: string[]
-  process: string
-  gallery: string[]
-  featured: boolean
-  status: 'draft' | 'published'
+  cover?: string
+  excerpt?: string
+  materials?: string[]
+  tools?: string[]
+  process?: string
+  gallery?: string[]
+  featured?: boolean
+  status?: 'draft' | 'published'
   createdAt: string
   updatedAt: string
 }
 
 export interface Journal {
-  id: number
+  id?: number
   title: string
   slug: string
   date: string
-  cover: string
-  excerpt: string
-  content: string
-  status: 'draft' | 'published'
+  cover?: string
+  excerpt?: string
+  content?: string
+  status?: 'draft' | 'published'
   createdAt: string
   updatedAt: string
 }

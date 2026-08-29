@@ -1,21 +1,23 @@
 <script setup lang="ts">
 const works = await queryCollection('works')
-  .where('featured', '=', true)
-  .where('status', '=', 'published')
-  .order('date', 'DESC')
-  .limit(3)
-  .all()
+    .where('featured', '=', true)
+    .where('status', '=', 'published')
+    .order('date', 'DESC')
+    .limit(3)
+    .all()
 
 const journals = await queryCollection('journal')
-  .where('status', '=', 'published')
-  .order('date', 'DESC')
-  .limit(2)
-  .all()
+    .where('status', '=', 'published')
+    .order('date', 'DESC')
+    .limit(2)
+    .all()
 
-const heroMainImage = works[0]?.cover || ''
+const heroMainImage = works?.find(
+    item => item.cover
+)?.cover || ''
 const studioCornerImage =
-  journals.find(item => item.cover)?.cover ||
-  'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg?auto=compress&cs=tinysrgb&w=1600'
+    journals.find(item => item.cover)?.cover ||
+    'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg?auto=compress&cs=tinysrgb&w=1600'
 
 useHead({
   title: 'Kakinn\'s Studio — 手工艺个人工作室'
@@ -30,7 +32,7 @@ useHead({
           <div class="hero-text">
             <p class="hero-eyebrow heading-eyebrow">手工艺 · 慢生活</p>
             <h1 class="hero-title heading-display">
-              用双手<br />记录时间的温度
+              用双手<br/>记录时间的温度
             </h1>
             <p class="hero-desc">
               一间安静的个人工作室，专注于木作、陶瓷与天然染色。
@@ -44,12 +46,12 @@ useHead({
           <div class="hero-visual">
             <div class="hero-image hero-image-main">
               <img
-                v-if="heroMainImage"
-                :src="heroMainImage"
-                alt="精选作品"
-                class="hero-image-media"
-                loading="lazy"
-                decoding="async"
+                  v-if="heroMainImage"
+                  :src="heroMainImage"
+                  alt="精选作品"
+                  class="hero-image-media"
+                  loading="lazy"
+                  decoding="async"
               />
               <div v-else class="image-placeholder">
                 <span class="placeholder-label">精选作品</span>
@@ -57,12 +59,12 @@ useHead({
             </div>
             <div class="hero-image hero-image-sub">
               <img
-                v-if="studioCornerImage"
-                :src="studioCornerImage"
-                alt="工作室一角"
-                class="hero-image-media"
-                loading="lazy"
-                decoding="async"
+                  v-if="studioCornerImage"
+                  :src="studioCornerImage"
+                  alt="工作室一角"
+                  class="hero-image-media"
+                  loading="lazy"
+                  decoding="async"
               />
               <div v-else class="image-placeholder">
                 <span class="placeholder-label small">工作室一角</span>
@@ -84,7 +86,7 @@ useHead({
         </div>
 
         <div v-if="works.length > 0" class="featured-grid">
-          <WorkCard v-for="work in works" :key="work.slug" :work="work" />
+          <WorkCard v-for="work in works" :key="work.slug" :work="work"/>
         </div>
         <div v-else class="empty-state">
           <p>暂无精选作品</p>
@@ -104,7 +106,7 @@ useHead({
           </div>
 
           <div v-if="journals.length > 0" class="recent-journals">
-            <JournalCard v-for="journal in journals" :key="journal.slug" :journal="journal" />
+            <JournalCard v-for="journal in journals" :key="journal.slug" :journal="journal"/>
           </div>
           <div v-else class="empty-state">
             <p>暂无日志</p>
@@ -125,19 +127,23 @@ useHead({
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-16);
-  align-items: center;
+  align-items: stretch;
 }
 
 .hero-text {
   position: relative;
   z-index: 0;
   padding: var(--space-10);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: clamp(420px, 42vw, 640px);
 }
 
 .hero-text::before {
   content: '';
   position: absolute;
-  inset: calc(-1 * var(--space-4)) var(--space-2) calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+  inset: 0 calc(-1 * var(--space-2)) 0 calc(-1 * var(--space-4));
   background: linear-gradient(180deg, rgba(238, 239, 237, 0.92) 0%, rgba(238, 239, 237, 0.72) 100%);
   border-radius: calc(var(--radius-lg) * 2);
   box-shadow: var(--shadow-sm);
@@ -208,6 +214,7 @@ useHead({
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
+
 .hero-image-media {
   display: block;
   width: 100%;
@@ -239,7 +246,7 @@ useHead({
 }
 
 .placeholder-label {
-  font-family: var(--font-serif);
+  font-family: var(--font-serif), serif;
   font-size: 1.25rem;
   color: var(--color-text-muted);
   opacity: 0.5;
@@ -249,7 +256,10 @@ useHead({
   font-size: 0.9rem;
 }
 
-.section-alt { background: var(--color-surface-alt); }
+.section-alt {
+  background: var(--color-surface-alt);
+}
+
 .section-head {
   display: flex;
   align-items: flex-end;
@@ -258,51 +268,79 @@ useHead({
   gap: var(--space-6);
   flex-wrap: wrap;
 }
+
 .section-more {
   font-size: 0.9rem;
   color: var(--color-text-muted);
   transition: color var(--transition-fast);
 }
-.section-more:hover { color: var(--color-accent); }
+
+.section-more:hover {
+  color: var(--color-accent);
+}
+
 .featured-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-10);
 }
-.recent-journals { display: flex; flex-direction: column; }
+
+.recent-journals {
+  display: flex;
+  flex-direction: column;
+}
+
 .empty-state {
   text-align: center;
   padding: var(--space-12) 0;
   color: var(--color-text-muted);
 }
+
 @media (max-width: 1024px) {
-  .featured-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-8); }
+  .featured-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-8);
+  }
 }
+
 @media (max-width: 768px) {
   .hero {
     padding-top: var(--space-12);
     padding-bottom: var(--space-16);
   }
+
   .hero-inner {
     grid-template-columns: 1fr;
     gap: var(--space-10);
   }
+
   .hero-text {
     padding: var(--space-8);
+    min-height: auto;
   }
+
   .hero-text::before {
     inset: calc(-1 * var(--space-3)) 0 calc(-1 * var(--space-4)) 0;
   }
+
   .hero-visual {
     order: -1;
   }
+
   .hero-image-sub {
     display: none;
   }
+
   .hero-desc {
     font-size: 1rem;
   }
-  .featured-grid { grid-template-columns: 1fr; }
-  .section-head { align-items: flex-start; }
+
+  .featured-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-head {
+    align-items: flex-start;
+  }
 }
 </style>

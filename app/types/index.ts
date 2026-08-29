@@ -8,14 +8,14 @@ export interface Work {
   createdAt: string   // 创建时间（ISO8601，后台新建时写）
   updatedAt: string   // 更新时间（ISO8601，新建/修改时均写）
   category: string
-  cover: string
-  excerpt: string
-  materials: string[]
-  tools: string[]
-  process: string
-  gallery: string[]
-  featured: boolean
-  status: 'draft' | 'published'
+  cover?: string
+  excerpt?: string
+  materials?: string[]
+  tools?: string[]
+  process?: string
+  gallery?: string[]
+  featured?: boolean
+  status?: 'draft' | 'published'
 }
 
 export interface Journal {
@@ -24,10 +24,10 @@ export interface Journal {
   date: string        // 发布日期
   createdAt: string   // 创建时间（ISO8601）
   updatedAt: string   // 更新时间（ISO8601）
-  cover: string
-  excerpt: string
-  content: string
-  status: 'draft' | 'published'
+  cover?: string
+  excerpt?: string
+  content?: string
+  status?: 'draft' | 'published'
 }
 
 export interface User {
