@@ -20,7 +20,7 @@ const timestamps = computed(() => {
 })
 
 useHead(() => ({
-  title: `${work?.title} — Kakinn Studio`,
+  title: `${work?.title} — Kakinn's Studio`,
   meta: [
     { name: 'description', content: work?.excerpt }
   ]

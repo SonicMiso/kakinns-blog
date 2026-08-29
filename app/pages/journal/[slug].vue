@@ -20,7 +20,7 @@ const timestamps = computed(() => {
 })
 
 useHead(() => ({
-  title: `${journal?.title} — Kakinn Studio`,
+  title: `${journal?.title} — Kakinn's Studio`,
   meta: [
     { name: 'description', content: journal?.excerpt }
   ]
@@ -87,13 +87,13 @@ function onCoverError(event: Event) {
 .back-link:hover { color: var(--color-accent); }
 .journal-date { font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: var(--space-4); }
 .journal-date .muted { opacity: 0.6; }
-.journal-title { font-family: var(--font-serif); font-size: clamp(1.75rem, 3.5vw, 2.5rem); font-weight: 600; line-height: 1.3; }
+.journal-title { font-family: var(--font-serif),serif; font-size: clamp(1.75rem, 3.5vw, 2.5rem); font-weight: 600; line-height: 1.3; }
 .journal-excerpt { max-width: 620px; margin: var(--space-4) auto 0; color: var(--color-text-secondary); line-height: 1.8; }
 .journal-cover { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-10); background: var(--color-surface); }
 .cover-media { display: block; width: 100%; height: 100%; object-fit: cover; }
 .cover-placeholder { position: absolute; inset: 0; background: linear-gradient(135deg, var(--color-surface-alt) 0%, #E0E3E2 50%, var(--color-surface-alt) 100%); }
 .markdown-body { color: var(--color-text-secondary); line-height: 1.9; font-size: 1.02rem; }
-.markdown-body :deep(h1), .markdown-body :deep(h2), .markdown-body :deep(h3), .markdown-body :deep(h4) { font-family: var(--font-serif); font-weight: 600; color: var(--color-text); line-height: 1.35; margin-top: var(--space-10); margin-bottom: var(--space-4); }
+.markdown-body :deep(h1), .markdown-body :deep(h2), .markdown-body :deep(h3), .markdown-body :deep(h4) { font-family: var(--font-serif),serif; font-weight: 600; color: var(--color-text); line-height: 1.35; margin-top: var(--space-10); margin-bottom: var(--space-4); }
 .markdown-body :deep(h1) { font-size: 1.75rem; }
 .markdown-body :deep(h2) { font-size: 1.5rem; }
 .markdown-body :deep(h3) { font-size: 1.25rem; }

@@ -1,5 +1,20 @@
 import { ref } from 'vue'
 
+interface AuthLoginSuccess {
+  success: true
+  user: {
+    id: number
+    username: string
+  }
+}
+
+interface AuthLoginFailure {
+  success: false
+  message: string
+}
+
+type AuthLoginResult = AuthLoginSuccess | AuthLoginFailure
+
 const isAuthenticated = ref(false)
 const isLoading = ref(true)
 
@@ -16,8 +31,8 @@ export function useAuth() {
     }
   }
 
-  async function login(username: string, password: string) {
-    const res = await $fetch('/api/auth/login', {
+  async function login(username: string, password: string): Promise<AuthLoginResult> {
+    const res = await $fetch<AuthLoginResult>('/api/auth/login', {
       method: 'POST',
       body: { username, password }
     })

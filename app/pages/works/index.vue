@@ -38,7 +38,7 @@ const { data: works } = await useAsyncData(
 )
 
 useHead({
-  title: '作品 — Kakinn Studio'
+  title: '作品 — Kakinn\'s Studio'
 })
 </script>
 

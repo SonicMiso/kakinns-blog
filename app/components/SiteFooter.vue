@@ -7,7 +7,7 @@ const currentYear = new Date().getFullYear()
     <div class="container">
       <div class="footer-inner">
         <div class="footer-brand">
-          <span class="footer-logo">Kakinn Studio</span>
+          <span class="footer-logo">Kakinn's Studio</span>
           <p class="footer-tagline">手工艺个人工作室 · 用双手记录时间</p>
         </div>
 
@@ -32,7 +32,7 @@ const currentYear = new Date().getFullYear()
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; {{ currentYear }} Kakinn Studio. All rights reserved.</p>
+        <p>&copy; {{ currentYear }} Kakinn's Studio. All rights reserved.</p>
       </div>
     </div>
   </footer>
@@ -57,7 +57,7 @@ const currentYear = new Date().getFullYear()
 
 .footer-logo {
   display: block;
-  font-family: var(--font-serif);
+  font-family: var(--font-serif),serif;
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-text);
@@ -84,7 +84,7 @@ const currentYear = new Date().getFullYear()
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
   margin-bottom: var(--space-4);
-  font-family: var(--font-sans);
+  font-family: var(--font-sans),sans-serif;
 }
 
 .footer-col ul {

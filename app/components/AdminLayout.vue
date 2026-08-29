@@ -25,7 +25,7 @@ watch(isAuthenticated, (val) => {
   <div v-if="!isLoading" class="admin-layout">
     <aside class="admin-sidebar">
       <div class="sidebar-header">
-        <NuxtLink to="/" class="brand">Kakinn Studio</NuxtLink>
+        <NuxtLink to="/" class="brand">Kakinn's Studio</NuxtLink>
         <span class="brand-sub">管理后台</span>
       </div>
       <nav class="sidebar-nav">
@@ -83,7 +83,7 @@ watch(isAuthenticated, (val) => {
 
 .brand {
   display: block;
-  font-family: var(--font-serif);
+  font-family: var(--font-serif),serif;
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text);

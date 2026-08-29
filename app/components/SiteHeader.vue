@@ -22,7 +22,7 @@ function closeMenu() {
     <div class="container">
       <div class="header-inner">
         <NuxtLink to="/" class="logo" @click="closeMenu">
-          <span class="logo-text">Kakinn Studio</span>
+          <span class="logo-text">Kakinn's Studio</span>
         </NuxtLink>
 
         <button class="menu-toggle" @click="toggleMenu" :aria-label="isMenuOpen ? '关闭菜单' : '打开菜单'">

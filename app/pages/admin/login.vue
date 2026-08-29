@@ -38,7 +38,7 @@ useHead({
   <div class="login-page">
     <div class="login-box">
       <div class="login-header">
-        <h1 class="login-title">Kakinn Studio</h1>
+        <h1 class="login-title">Kakinn's Studio</h1>
         <p class="login-subtitle">管理后台</p>
       </div>
 
@@ -76,7 +76,7 @@ useHead({
       </form>
 
       <div class="login-hint">
-        <p>默认账号：admin / admin</p>
+        <p>Remember you are the best.</p>
       </div>
     </div>
   </div>
@@ -107,7 +107,7 @@ useHead({
 }
 
 .login-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-serif),serif;
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--color-text);
