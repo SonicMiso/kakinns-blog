@@ -8,7 +8,7 @@ function onStudioCoverError(event: Event) {
 }
 
 useHead({
-  title: '关于 — Kakin Studio'
+  title: '关于 — Kakinn Studio'
 })
 </script>
 
@@ -38,7 +38,7 @@ useHead({
 
           <div class="prose about-text">
             <p>
-              Kakin Studio 是一间独立的手工艺个人工作室，成立于 2022 年。
+              Kakinn Studio 是一间独立的手工艺个人工作室，成立于 2022 年。
               工作室专注于木作、陶瓷与天然染色三个方向，
               每一件作品都由手工完成。
             </p>
@@ -74,8 +74,8 @@ useHead({
               欢迎通过以下方式联系我们：
             </p>
             <ul>
-              <li>邮箱：hello@kakin.studio</li>
-              <li>微信：kakin-studio</li>
+              <li>邮箱：hello@kakinn.studio</li>
+              <li>微信：kakinn-studio</li>
               <li>工作室地址：预约制，暂不对外开放</li>
             </ul>
           </div>

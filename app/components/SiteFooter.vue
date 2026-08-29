@@ -7,7 +7,7 @@ const currentYear = new Date().getFullYear()
     <div class="container">
       <div class="footer-inner">
         <div class="footer-brand">
-          <span class="footer-logo">Kakin Studio</span>
+          <span class="footer-logo">Kakinn Studio</span>
           <p class="footer-tagline">手工艺个人工作室 · 用双手记录时间</p>
         </div>
 
@@ -23,7 +23,7 @@ const currentYear = new Date().getFullYear()
           <div class="footer-col">
             <h5>联系</h5>
             <ul>
-              <li><a href="mailto:hello@kakin.studio">hello@kakin.studio</a></li>
+              <li><a href="mailto:hello@kakinn.studio">hello@kakinn.studio</a></li>
               <li><a href="#" target="_blank" rel="noopener">Instagram</a></li>
               <li><a href="#" target="_blank" rel="noopener">小红书</a></li>
             </ul>
@@ -32,7 +32,7 @@ const currentYear = new Date().getFullYear()
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; {{ currentYear }} Kakin Studio. All rights reserved.</p>
+        <p>&copy; {{ currentYear }} Kakinn Studio. All rights reserved.</p>
       </div>
     </div>
   </footer>

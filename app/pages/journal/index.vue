@@ -6,7 +6,7 @@ const journals = await queryCollection('journal')
   .all()
 
 useHead({
-  title: '日志 — Kakin Studio'
+  title: '日志 — Kakinn Studio'
 })
 </script>
 

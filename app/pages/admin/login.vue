@@ -38,7 +38,7 @@ useHead({
   <div class="login-page">
     <div class="login-box">
       <div class="login-header">
-        <h1 class="login-title">Kakin Studio</h1>
+        <h1 class="login-title">Kakinn Studio</h1>
         <p class="login-subtitle">管理后台</p>
       </div>
 

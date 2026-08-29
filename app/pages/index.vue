@@ -18,7 +18,7 @@ const studioCornerImage =
   'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg?auto=compress&cs=tinysrgb&w=1600'
 
 useHead({
-  title: 'Kakin Studio — 手工艺个人工作室'
+  title: 'Kakinn\'s Studio — 手工艺个人工作室'
 })
 </script>
 
@@ -126,6 +126,22 @@ useHead({
   grid-template-columns: 1fr 1fr;
   gap: var(--space-16);
   align-items: center;
+}
+
+.hero-text {
+  position: relative;
+  z-index: 0;
+  padding: var(--space-10);
+}
+
+.hero-text::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--space-4)) var(--space-2) calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+  background: linear-gradient(180deg, rgba(238, 239, 237, 0.92) 0%, rgba(238, 239, 237, 0.72) 100%);
+  border-radius: calc(var(--radius-lg) * 2);
+  box-shadow: var(--shadow-sm);
+  z-index: -1;
 }
 
 .hero-eyebrow {
@@ -270,6 +286,12 @@ useHead({
   .hero-inner {
     grid-template-columns: 1fr;
     gap: var(--space-10);
+  }
+  .hero-text {
+    padding: var(--space-8);
+  }
+  .hero-text::before {
+    inset: calc(-1 * var(--space-3)) 0 calc(-1 * var(--space-4)) 0;
   }
   .hero-visual {
     order: -1;

@@ -43,8 +43,8 @@ function assertConfig() {
     owner: cfg.githubOwner,
     repo: cfg.githubRepo,
     branch: cfg.githubBranch || 'master',
-    committerName: cfg.githubCommitterName || 'Kakin Studio Bot',
-    committerEmail: cfg.githubCommitterEmail || 'bot@kakin.studio',
+    committerName: cfg.githubCommitterName || 'Kakinn Studio Bot',
+    committerEmail: cfg.githubCommitterEmail || 'bot@kakinn.studio',
     baseUrl: cfg.githubBaseUrl || ''
   }
 }

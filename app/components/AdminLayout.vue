@@ -25,7 +25,7 @@ watch(isAuthenticated, (val) => {
   <div v-if="!isLoading" class="admin-layout">
     <aside class="admin-sidebar">
       <div class="sidebar-header">
-        <NuxtLink to="/" class="brand">Kakin Studio</NuxtLink>
+        <NuxtLink to="/" class="brand">Kakinn Studio</NuxtLink>
         <span class="brand-sub">管理后台</span>
       </div>
       <nav class="sidebar-nav">

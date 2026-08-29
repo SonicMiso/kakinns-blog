@@ -12,7 +12,7 @@ function getKey() {
   const { sessionSecret } = useRuntimeConfig()
   if (!sessionSecret || sessionSecret.length < 16) {
     // 兜底：本地开发时不强制
-    return 'kakin-local-dev-key-not-for-production-use-'
+    return 'kakinn-local-dev-key-not-for-production-use-'
   }
   return sessionSecret
 }

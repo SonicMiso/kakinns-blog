@@ -1,7 +1,7 @@
 services:
-  kakins-blog:
-    image: kakins-blog:${IMAGE_TAG:-latest}
-    container_name: kakins-blog
+  kakinns-blog:
+    image: kakinns-blog:${IMAGE_TAG:-latest}
+    container_name: kakinns-blog
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -14,8 +14,8 @@ services:
       NUXT_GITHUB_OWNER: ${NUXT_GITHUB_OWNER:-}
       NUXT_GITHUB_REPO: ${NUXT_GITHUB_REPO:-}
       NUXT_GITHUB_BRANCH: ${NUXT_GITHUB_BRANCH:-master}
-      NUXT_GITHUB_COMMITTER_NAME: ${NUXT_GITHUB_COMMITTER_NAME:-Kakin Studio Bot}
-      NUXT_GITHUB_COMMITTER_EMAIL: ${NUXT_GITHUB_COMMITTER_EMAIL:-bot@kakin.studio}
+      NUXT_GITHUB_COMMITTER_NAME: ${NUXT_GITHUB_COMMITTER_NAME:-Kakinn Studio Bot}
+      NUXT_GITHUB_COMMITTER_EMAIL: ${NUXT_GITHUB_COMMITTER_EMAIL:-bot@kakinn.studio}
       NUXT_GITHUB_BASE_URL: ${NUXT_GITHUB_BASE_URL:-}
       NUXT_PUBLIC_SITE_COMMIT_SHA: ${NUXT_PUBLIC_SITE_COMMIT_SHA:-}
       NUXT_PUBLIC_SITE_BUILD_TIME: ${NUXT_PUBLIC_SITE_BUILD_TIME:-}
