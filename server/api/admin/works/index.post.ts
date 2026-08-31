@@ -1,5 +1,5 @@
 import type { Work } from '~/types'
-import { queryCollection } from '@nuxt/content/server'
+import { adminWorkSlugExists } from '../../../utils/adminContent'
 import { commitContentChanges } from '../../../utils/github'
 
 function parseArrayField(v: any): string[] {
@@ -57,8 +57,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 唯一性检查：同一 collection slug 必须唯一（否则 query slug 会命中多条）
-  const dup = (await queryCollection<Work>(event, 'works').where('slug', '=', slug).limit(1).all()) as Work[]
-  if (dup.length > 0) {
+  if (await adminWorkSlugExists(slug)) {
     throw createError({ statusCode: 409, statusMessage: `slug ${slug} 已存在` })
   }
 

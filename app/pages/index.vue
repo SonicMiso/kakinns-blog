@@ -1,23 +1,20 @@
 <script setup lang="ts">
-const works = await queryCollection('works')
-    .where('featured', '=', true)
-    .where('status', '=', 'published')
-    .order('date', 'DESC')
-    .limit(3)
-    .all()
+import type { Journal, PaginatedResponse, Work } from '~/types'
 
-const journals = await queryCollection('journal')
-    .where('status', '=', 'published')
-    .order('date', 'DESC')
-    .limit(2)
-    .all()
+const [worksRes, journalsRes] = await Promise.all([
+  $fetch<PaginatedResponse<Work>>('/api/works', { params: { featured: true, limit: 3 } }),
+  $fetch<PaginatedResponse<Journal>>('/api/journal', { params: { limit: 2 } })
+])
+
+const works = worksRes.items
+const journals = journalsRes.items
 
 const heroMainImage = works?.find(
-    item => item.cover
+  item => item.cover
 )?.cover || ''
 const studioCornerImage =
-    journals.find(item => item.cover)?.cover ||
-    'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg?auto=compress&cs=tinysrgb&w=1600'
+  journals.find(item => item.cover)?.cover ||
+  'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg?auto=compress&cs=tinysrgb&w=1600'
 
 useHead({
   title: 'Kakinn\'s Studio — 手工艺个人工作室'

@@ -1,5 +1,5 @@
 import type { Journal } from '~/types'
-import { queryCollection } from '@nuxt/content/server'
+import { adminJournalSlugExists } from '../../../utils/adminContent'
 import { commitContentChanges } from '../../../utils/github'
 
 // ⚠️ 绝对禁止手写 frontmatter 'id' 字段
@@ -31,8 +31,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // slug 唯一性检查
-  const dup = (await queryCollection<Journal>(event, 'journal').where('slug', '=', slug).limit(1).all()) as Journal[]
-  if (dup.length > 0) {
+  if (await adminJournalSlugExists(slug)) {
     throw createError({ statusCode: 409, statusMessage: `slug ${slug} 已存在` })
   }
 

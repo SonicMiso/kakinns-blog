@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { PaginatedResponse, Work } from '~/types'
 import { CATEGORIES } from '~/../shared/types'
 
 const route = useRoute()
@@ -24,15 +25,16 @@ watch(() => route.query.category, (v) => {
   activeCategory.value = cat
 })
 
-// Nuxt Content v3 公共 chainable 只暴露 where/andWhere/orWhere/order；需要用 useFetch + useAsyncData key 配合 watch 切换分类
 const { data: works } = await useAsyncData(
   'works-list',
   async () => {
-    const q = queryCollection('works').where('status', '=', 'published')
-    if (activeCategory.value) q.where('category', '=', activeCategory.value)
-    q.order('date', 'DESC').limit(100)
-    // .all() 是原始 builder 方法（Promise<Doc[]>），await 直接拿到数组
-    return (await q.all()) as any[]
+    const res = await $fetch<PaginatedResponse<Work>>('/api/works', {
+      params: {
+        category: activeCategory.value || undefined,
+        limit: 100
+      }
+    })
+    return res.items
   },
   { watch: [activeCategory], default: () => [] }
 )

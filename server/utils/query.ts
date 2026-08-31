@@ -2,6 +2,25 @@
 
 import type { Work, Journal, PaginatedResponse } from '~/types'
 import { queryCollection } from '@nuxt/content/server'
+import { readFrontmatterString, tryReadCollectionSource } from './contentSource'
+
+async function hydrateWorkEntry<T extends Work>(work: T): Promise<T> {
+  const source = await tryReadCollectionSource('works', work.slug)
+  return {
+    ...work,
+    cover: readFrontmatterString(source, 'cover', work.cover || ''),
+    excerpt: readFrontmatterString(source, 'excerpt', work.excerpt || '')
+  }
+}
+
+async function hydrateJournalEntry<T extends Journal>(journal: T): Promise<T> {
+  const source = await tryReadCollectionSource('journal', journal.slug)
+  return {
+    ...journal,
+    cover: readFrontmatterString(source, 'cover', journal.cover || ''),
+    excerpt: readFrontmatterString(source, 'excerpt', journal.excerpt || '')
+  }
+}
 
 interface WorkQueryOptions {
   limit?: number
@@ -28,13 +47,13 @@ export async function queryWorks(event: any, opts: WorkQueryOptions = {}): Promi
 
   const all = await (q.order('date', 'DESC').order('createdAt', 'DESC') as any).all()
   const total = all.length
-  const items = all.slice(offset, offset + limit) as Work[]
+  const items = await Promise.all(all.slice(offset, offset + limit).map(work => hydrateWorkEntry(work as Work)))
   return { items, total, page, limit }
 }
 
 export async function queryWorkBySlug(event: any, slug: string): Promise<Work | null> {
   const matches = (await queryCollection<Work>(event, 'works').where('slug', '=', slug).limit(1).all()) as Work[]
-  return matches[0] || null
+  return matches[0] ? hydrateWorkEntry(matches[0]) : null
 }
 
 interface JournalQueryOptions {
@@ -58,11 +77,11 @@ export async function queryJournals(
 
   const all = await (q.order('date', 'DESC').order('createdAt', 'DESC') as any).all()
   const total = all.length
-  const items = all.slice(offset, offset + limit) as Journal[]
+  const items = await Promise.all(all.slice(offset, offset + limit).map(journal => hydrateJournalEntry(journal as Journal)))
   return { items, total, page, limit }
 }
 
 export async function queryJournalBySlug(event: any, slug: string): Promise<Journal | null> {
   const matches = (await queryCollection<Journal>(event, 'journal').where('slug', '=', slug).limit(1).all()) as Journal[]
-  return matches[0] || null
+  return matches[0] ? hydrateJournalEntry(matches[0]) : null
 }

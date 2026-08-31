@@ -1,5 +1,5 @@
 import type { Work } from '~/types'
-import { queryCollection } from '@nuxt/content/server'
+import { getAdminWorkBySlug } from '../../../utils/adminContent'
 import { commitContentChanges } from '../../../utils/github'
 
 function parseArrayField(v: any): string[] {
@@ -31,8 +31,7 @@ function frontmatter(obj: Record<string, any>) {
 // 路由参数语义：slug（旧 slug 字符串）；用户若在表单中改了 slug 则需移动（删旧文件）
 export default defineEventHandler(async (event) => {
   const oldSlug = getRouterParam(event, 'id') || ''
-  const matches = (await queryCollection<Work>(event, 'works').where('slug', '=', oldSlug).limit(1).all()) as Work[]
-  const old = matches[0] as any
+  const old = await getAdminWorkBySlug(oldSlug)
   if (!old) throw createError({ statusCode: 404, statusMessage: 'Work not found' })
 
   const body = await readBody(event)
@@ -82,12 +81,12 @@ export default defineEventHandler(async (event) => {
 
   // 正文：优先 body.process（新名），否则沿用旧
   const processText: string =
-    body.process !== undefined ? String(body.process) : (old.content || old.body || old.process || '')
+    body.process !== undefined ? String(body.process) : old.process
 
   const md = frontmatter(meta) + processText + '\n'
 
   const deletes: { path: string }[] = []
-  if (old.slug !== meta.slug) deletes.push({ path: `content/works/${old.slug}.md` })
+  if (old.slug !== meta.slug) deletes.push({ path: old.storagePath })
 
   const result = await commitContentChanges({
     message: `edit(works): 更新作品 ${meta.title} (${meta.slug})`,

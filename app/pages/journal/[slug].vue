@@ -1,15 +1,13 @@
 <script setup lang="ts">
+import type { Journal } from '~/types'
 import { formatDateLong, formatCreatedUpdated } from '~/utils/format'
 
 const route = useRoute()
 const slug = route.params.slug as string
 
-const journal = await queryCollection('journal')
-  .where('slug', '=', slug)
-  .where('status', '=', 'published')
-  .first()
+const journal = await $fetch<(Journal & { body?: unknown }) | null>(`/api/journal/${slug}`)
 
-if (!journal) {
+if (!journal || journal.status !== 'published') {
   throw createError({ statusCode: 404, statusMessage: '日志不存在' })
 }
 

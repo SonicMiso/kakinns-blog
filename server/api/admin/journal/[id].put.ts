@@ -1,5 +1,5 @@
 import type { Journal } from '~/types'
-import { queryCollection } from '@nuxt/content/server'
+import { getAdminJournalBySlug } from '../../../utils/adminContent'
 import { commitContentChanges } from '../../../utils/github'
 
 // ⚠️ 绝对禁止手写 frontmatter 'id' 字段
@@ -14,8 +14,7 @@ function frontmatter(obj: Record<string, any>) {
 
 export default defineEventHandler(async (event) => {
   const oldSlug = getRouterParam(event, 'id') || ''
-  const matches = (await queryCollection<Journal>(event, 'journal').where('slug', '=', oldSlug).limit(1).all()) as Journal[]
-  const old = matches[0] as any
+  const old = await getAdminJournalBySlug(oldSlug)
   if (!old) throw createError({ statusCode: 404, statusMessage: 'Journal not found' })
 
   const body = await readBody(event)
@@ -44,13 +43,13 @@ export default defineEventHandler(async (event) => {
 
   // 正文：优先 body.content（新名），否则沿用旧
   const contentText: string =
-    body.content !== undefined ? String(body.content) : (old.content || old.body || '')
+    body.content !== undefined ? String(body.content) : old.content
 
   const fm = frontmatter(meta)
   const mdContent = fm + contentText + '\n'
 
   const deletes: { path: string }[] = []
-  if (old.slug !== meta.slug) deletes.push({ path: `content/journal/${old.slug}.md` })
+  if (old.slug !== meta.slug) deletes.push({ path: old.storagePath })
 
   const result = await commitContentChanges({
     message: `edit(journal): 更新日志 ${meta.title} (${meta.slug})`,

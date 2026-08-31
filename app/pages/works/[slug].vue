@@ -1,15 +1,13 @@
 <script setup lang="ts">
+import type { Work } from '~/types'
 import { formatDate, formatDateLong, formatCreatedUpdated, getCategoryLabel } from '~/utils/format'
 
 const route = useRoute()
 const slug = route.params.slug as string
 
-const work = await queryCollection('works')
-  .where('slug', '=', slug)
-  .where('status', '=', 'published')
-  .first()
+const work = await $fetch<(Work & { body?: unknown }) | null>(`/api/works/${slug}`)
 
-if (!work) {
+if (!work || work.status !== 'published') {
   throw createError({ statusCode: 404, statusMessage: '作品不存在' })
 }
 

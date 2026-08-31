@@ -1,17 +1,15 @@
-import type { Work } from '~/types'
-import { queryCollection } from '@nuxt/content/server'
+import { getAdminWorkBySlug } from '../../../utils/adminContent'
 import { commitContentChanges } from '../../../utils/github'
 
 // 路由参数语义：slug（字符串）
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'id') || ''
-  const matches = (await queryCollection<Work>(event, 'works').where('slug', '=', slug).limit(1).all()) as Work[]
-  const work = matches[0] as any
+  const work = await getAdminWorkBySlug(slug)
   if (!work) throw createError({ statusCode: 404, statusMessage: 'Work not found' })
 
   const result = await commitContentChanges({
     message: `delete(works): 删除作品 ${work.title} (${work.slug})`,
-    deletes: [{ path: `content/works/${work.slug}.md` }]
+    deletes: [{ path: work.storagePath }]
   })
   return {
     success: true,

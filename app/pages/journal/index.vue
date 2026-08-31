@@ -1,9 +1,10 @@
 <script setup lang="ts">
-const journals = await queryCollection('journal')
-  .where('status', '=', 'published')
-  .order('date', 'DESC')
-  .limit(20)
-  .all()
+import type { Journal, PaginatedResponse } from '~/types'
+
+const journalsRes = await $fetch<PaginatedResponse<Journal>>('/api/journal', {
+  params: { limit: 20 }
+})
+const journals = journalsRes.items
 
 useHead({
   title: '日志 — Kakinn\'s Studio'

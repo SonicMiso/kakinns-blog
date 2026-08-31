@@ -1,4 +1,4 @@
-import { queryWorks } from '../../../utils/query'
+import { listAdminWorks } from '../../../utils/adminContent'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -6,11 +6,10 @@ export default defineEventHandler(async (event) => {
   const limit = parseInt(query.limit as string) || 50
   const category = query.category as string | undefined
   const status = (query.status as 'draft' | 'published') || undefined
-  return queryWorks(event, {
+  return listAdminWorks({
     page,
     limit,
     category,
-    status,
-    includeUnpublished: !status
+    status
   })
 })

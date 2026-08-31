@@ -1,17 +1,15 @@
-import type { Journal } from '~/types'
-import { queryCollection } from '@nuxt/content/server'
+import { getAdminJournalBySlug } from '../../../utils/adminContent'
 import { commitContentChanges } from '../../../utils/github'
 
 // 路由参数语义：slug（字符串）
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'id') || ''
-  const matches = (await queryCollection<Journal>(event, 'journal').where('slug', '=', slug).limit(1).all()) as Journal[]
-  const journal = matches[0]
+  const journal = await getAdminJournalBySlug(slug)
   if (!journal) throw createError({ statusCode: 404, statusMessage: 'Journal not found' })
 
   const result = await commitContentChanges({
     message: `delete(journal): 删除日志 ${journal.title} (${journal.slug})`,
-    deletes: [{ path: `content/journal/${journal.slug}.md` }]
+    deletes: [{ path: journal.storagePath }]
   })
   return {
     success: true,
