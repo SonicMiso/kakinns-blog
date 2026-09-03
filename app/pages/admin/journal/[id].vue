@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Journal } from '~/types'
 import { generateSlug } from '~/utils/format'
+import { pickFirstMeaningfulText } from '~/utils/adminFormValue'
 import SyncStatusChip from '~/components/admin/SyncStatusChip.vue'
 import { writeLastPushed } from '~/composables/useLastPushed'
 
@@ -42,8 +43,12 @@ onMounted(async () => {
       slug: journal.slug,
       date: journal.date,
       cover: journal.cover,
-      excerpt: journal.excerpt,
-      content: journal.content ?? journal.body ?? '',
+      excerpt: pickFirstMeaningfulText(journal.excerpt, (journal as Record<string, any>).summary),
+      content: pickFirstMeaningfulText(
+        journal.content,
+        journal.body,
+        (journal as Record<string, any>).process
+      ),
       status: journal.status || 'draft'
     }
   } catch (e) {

@@ -2,6 +2,7 @@
 import type { Work } from '~/types'
 import { CATEGORIES } from '~/types'
 import { generateSlug } from '~/utils/format'
+import { pickFirstMeaningfulText } from '~/utils/adminFormValue'
 import SyncStatusChip from '~/components/admin/SyncStatusChip.vue'
 import { writeLastPushed } from '~/composables/useLastPushed'
 
@@ -49,10 +50,14 @@ onMounted(async () => {
       date: work.date,
       category: work.category,
       cover: work.cover,
-      excerpt: work.excerpt,
+      excerpt: pickFirstMeaningfulText(work.excerpt, (work as Record<string, any>).summary),
       materials: (work.materials || []).join('\n'),
       tools: (work.tools || []).join('\n'),
-      process: work.process ?? work.body ?? work.content ?? '',
+      process: pickFirstMeaningfulText(
+        work.process,
+        work.body,
+        (work as Record<string, any>).content
+      ),
       gallery: (work.gallery || []).join('\n'),
       featured: !!work.featured,
       status: work.status || 'draft'
