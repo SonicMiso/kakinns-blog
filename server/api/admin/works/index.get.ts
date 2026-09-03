@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
   const category = query.category as string | undefined
   const status = (query.status as 'draft' | 'published') || undefined
   return listAdminWorks({
+    event,
     page,
     limit,
     category,

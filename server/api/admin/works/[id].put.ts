@@ -31,7 +31,7 @@ function frontmatter(obj: Record<string, any>) {
 // 路由参数语义：slug（旧 slug 字符串）；用户若在表单中改了 slug 则需移动（删旧文件）
 export default defineEventHandler(async (event) => {
   const oldSlug = getRouterParam(event, 'id') || ''
-  const old = await getAdminWorkBySlug(oldSlug)
+  const old = await getAdminWorkBySlug(event, oldSlug)
   if (!old) throw createError({ statusCode: 404, statusMessage: 'Work not found' })
 
   const body = await readBody(event)

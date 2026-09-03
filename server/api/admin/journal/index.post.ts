@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // slug 唯一性检查
-  if (await adminJournalSlugExists(slug)) {
+  if (await adminJournalSlugExists(event, slug)) {
     throw createError({ statusCode: 409, statusMessage: `slug ${slug} 已存在` })
   }
 

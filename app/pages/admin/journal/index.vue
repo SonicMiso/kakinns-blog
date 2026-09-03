@@ -8,14 +8,12 @@ definePageMeta({
   layout: false
 })
 
-const { isAuthenticated, isLoading } = useAuth()
-
 const page = ref(1)
 const limit = ref(10)
 const statusFilter = ref<string>('')
 
 // admin = ssr:false，纯 CSR，$fetch 自动带浏览器 cookie，无需 useRequestHeaders
-const { data: journalsData, refresh } = await useAsyncData('admin-journal', () => {
+const { data: journalsData, refresh, error: journalsError } = await useAsyncData('admin-journal', () => {
   return $fetch('/api/admin/journal', {
     query: {
       page: page.value,
@@ -25,6 +23,12 @@ const { data: journalsData, refresh } = await useAsyncData('admin-journal', () =
   })
 }, {
   default: () => ({ items: [] as Journal[], total: 0, page: 1, limit: 10 })
+})
+
+const loadErrorMessage = computed(() => {
+  const e = journalsError.value as any
+  if (!e) return ''
+  return e?.data?.message || e?.data?.statusMessage || e?.message || '加载失败，请刷新重试'
 })
 
 async function handleDelete(slug: string) {
@@ -87,6 +91,10 @@ useHead({
       </div>
 
       <div class="data-table-wrapper">
+        <div v-if="loadErrorMessage" class="load-error">
+          {{ loadErrorMessage }}
+        </div>
+
         <table class="data-table">
           <thead>
             <tr>
@@ -228,6 +236,14 @@ useHead({
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-light);
   overflow: hidden;
+}
+
+.load-error {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border-light);
+  background: rgba(181, 75, 75, 0.08);
+  color: var(--color-error);
+  font-size: 0.88rem;
 }
 
 .data-table {

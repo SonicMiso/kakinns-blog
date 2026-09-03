@@ -14,7 +14,7 @@ function frontmatter(obj: Record<string, any>) {
 
 export default defineEventHandler(async (event) => {
   const oldSlug = getRouterParam(event, 'id') || ''
-  const old = await getAdminJournalBySlug(oldSlug)
+  const old = await getAdminJournalBySlug(event, oldSlug)
   if (!old) throw createError({ statusCode: 404, statusMessage: 'Journal not found' })
 
   const body = await readBody(event)

@@ -6,6 +6,7 @@ export default defineEventHandler(async (event) => {
   const limit = parseInt(query.limit as string) || 50
   const status = (query.status as 'draft' | 'published') || undefined
   return listAdminJournals({
+    event,
     page,
     limit,
     status

@@ -1,8 +1,8 @@
-import { readdir } from 'node:fs/promises'
-import path from 'node:path'
+import { queryCollection } from '@nuxt/content/server'
 import type { Journal, PaginatedResponse, Work } from '~/types'
-import { parseMarkdownSource } from './contentSource'
-import { readFile } from 'node:fs/promises'
+import { bodyLikeToString } from './rawContent'
+import type { H3Event } from 'h3'
+import { readFrontmatterString, tryReadCollectionSource, type CollectionName } from './contentSource'
 
 export interface AdminWorkEntry extends Work {
   process: string
@@ -17,60 +17,40 @@ export interface AdminJournalEntry extends Journal {
 const WORK_CATEGORIES = new Set(['wood', 'ceramics', 'textile', 'paper', 'metal', 'other'])
 const CONTENT_STATUSES = new Set(['draft', 'published'])
 
-async function listMarkdownFilesRecursive(dir: string): Promise<string[]> {
-  try {
-    const entries = await readdir(dir, { withFileTypes: true })
-    const nested = await Promise.all(entries.map(async (entry) => {
-      const fullPath = path.join(dir, entry.name)
-      if (entry.isDirectory()) return listMarkdownFilesRecursive(fullPath)
-      return entry.isFile() && fullPath.toLowerCase().endsWith('.md') ? [fullPath] : []
-    }))
-    return nested.flat()
-  } catch (error: any) {
-    if (error?.code === 'ENOENT') return []
-    throw error
+function normalizeStatus(value: unknown): 'draft' | 'published' {
+  if (typeof value === 'string' && CONTENT_STATUSES.has(value)) {
+    return value as 'draft' | 'published'
   }
+  return 'draft'
 }
 
-function getFrontmatterObject(input: unknown): Record<string, unknown> {
-  return input && typeof input === 'object' && !Array.isArray(input)
-    ? input as Record<string, unknown>
-    : {}
+function normalizeString(value: unknown): string {
+  return typeof value === 'string' ? value : ''
 }
 
-function readString(frontmatter: Record<string, unknown>, key: string, fallback = ''): string {
-  if (!Object.prototype.hasOwnProperty.call(frontmatter, key)) return fallback
-  const value = frontmatter[key]
-  if (typeof value === 'string') return value
-  if (value === undefined || value === null) return ''
-  return String(value)
-}
-
-function pickMarkdownBody(primary: string, fallback: string): string {
-  if (typeof primary === 'string' && primary.trim().length > 0) return primary
-  if (typeof fallback === 'string') return fallback
-  return ''
-}
-
-function readStringArray(frontmatter: Record<string, unknown>, key: string): string[] {
-  const value = frontmatter[key]
+function normalizeStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return []
-  return value
-    .map(item => (item === undefined || item === null ? '' : String(item).trim()))
-    .filter(Boolean)
+  return value.map(item => String(item)).filter(Boolean)
 }
 
-function readBoolean(frontmatter: Record<string, unknown>, key: string, fallback = false): boolean {
-  if (!Object.prototype.hasOwnProperty.call(frontmatter, key)) return fallback
-  const value = frontmatter[key]
-  if (typeof value === 'boolean') return value
-  if (typeof value === 'string') return value === 'true'
-  return Boolean(value)
+function resolveStoragePath(collection: CollectionName, row: any, slug: string): string {
+  const stem = typeof row?.stem === 'string' ? row.stem : ''
+  if (stem.startsWith(`${collection}/`)) return `content/${stem}.md`
+  return `content/${collection}/${slug}.md`
 }
 
-function readStatus(frontmatter: Record<string, unknown>): 'draft' | 'published' {
-  const value = readString(frontmatter, 'status', 'draft')
-  return CONTENT_STATUSES.has(value) ? value as 'draft' | 'published' : 'draft'
+async function resolveExcerpt(
+  collection: CollectionName,
+  slug: string,
+  rowExcerpt: string,
+  rowDescription: string
+): Promise<string> {
+  const source = await tryReadCollectionSource(collection, slug)
+  return readFrontmatterString(
+    source,
+    'excerpt',
+    readFrontmatterString(source, 'summary', rowExcerpt || rowDescription || '')
+  )
 }
 
 function sortByNewest<T extends { date: string, createdAt: string }>(a: T, b: T): number {
@@ -79,59 +59,8 @@ function sortByNewest<T extends { date: string, createdAt: string }>(a: T, b: T)
   return b.createdAt.localeCompare(a.createdAt)
 }
 
-async function loadCollectionEntries(collection: 'works'): Promise<AdminWorkEntry[]>
-async function loadCollectionEntries(collection: 'journal'): Promise<AdminJournalEntry[]>
-async function loadCollectionEntries(collection: 'works' | 'journal') {
-  const baseDir = path.resolve(process.cwd(), 'content', collection)
-  const files = await listMarkdownFilesRecursive(baseDir)
-
-  const entries = await Promise.all(files.map(async (filePath) => {
-    const raw = await readFile(filePath, 'utf8')
-    const source = parseMarkdownSource(raw)
-    const frontmatter = getFrontmatterObject(source.frontmatter)
-    const slugFallback = path.basename(filePath, '.md')
-    const slug = readString(frontmatter, 'slug', slugFallback) || slugFallback
-    const storagePath = path.relative(process.cwd(), filePath).replace(/\\/g, '/')
-
-    if (collection === 'works') {
-      const category = readString(frontmatter, 'category', 'wood')
-      return {
-        title: readString(frontmatter, 'title', ''),
-        slug,
-        date: readString(frontmatter, 'date', ''),
-        createdAt: readString(frontmatter, 'createdAt', ''),
-        updatedAt: readString(frontmatter, 'updatedAt', ''),
-        category: WORK_CATEGORIES.has(category) ? category : 'other',
-        cover: readString(frontmatter, 'cover', ''),
-        excerpt: readString(frontmatter, 'excerpt', readString(frontmatter, 'summary', '')),
-        materials: readStringArray(frontmatter, 'materials'),
-        tools: readStringArray(frontmatter, 'tools'),
-        gallery: readStringArray(frontmatter, 'gallery'),
-        featured: readBoolean(frontmatter, 'featured', false),
-        status: readStatus(frontmatter),
-        process: pickMarkdownBody(source.body, readString(frontmatter, 'process', '')),
-        storagePath
-      } satisfies AdminWorkEntry
-    }
-
-    return {
-      title: readString(frontmatter, 'title', ''),
-      slug,
-      date: readString(frontmatter, 'date', ''),
-      createdAt: readString(frontmatter, 'createdAt', ''),
-      updatedAt: readString(frontmatter, 'updatedAt', ''),
-      cover: readString(frontmatter, 'cover', ''),
-      excerpt: readString(frontmatter, 'excerpt', readString(frontmatter, 'summary', '')),
-      status: readStatus(frontmatter),
-      content: pickMarkdownBody(source.body, readString(frontmatter, 'content', '')),
-      storagePath
-    } satisfies AdminJournalEntry
-  }))
-
-  return entries.sort(sortByNewest)
-}
-
 export async function listAdminWorks(opts: {
+  event: H3Event
   page?: number
   limit?: number
   category?: string
@@ -140,23 +69,44 @@ export async function listAdminWorks(opts: {
   const page = Math.max(1, opts.page || 1)
   const limit = Math.max(1, opts.limit || 50)
   const offset = (page - 1) * limit
-  const all = await loadCollectionEntries('works')
-
-  const filtered = all.filter((work) => {
-    if (opts.category && work.category !== opts.category) return false
-    if (opts.status && work.status !== opts.status) return false
-    return true
-  })
+  let query = queryCollection<Work>(opts.event, 'works')
+  if (opts.category) query = query.where('category', '=', opts.category) as any
+  if (opts.status) query = query.where('status', '=', opts.status) as any
+  const rows = await (query.order('date', 'DESC').order('createdAt', 'DESC') as any).all()
+  const all = await Promise.all(rows.map(async (row: any) => {
+    const slug = typeof row.slug === 'string' ? row.slug : ''
+    const category = typeof row.category === 'string' && WORK_CATEGORIES.has(row.category) ? row.category : 'other'
+    const excerpt = await resolveExcerpt('works', slug, normalizeString(row.excerpt), normalizeString(row.description))
+    return {
+      title: normalizeString(row.title),
+      slug,
+      date: normalizeString(row.date),
+      createdAt: normalizeString(row.createdAt),
+      updatedAt: normalizeString(row.updatedAt),
+      category,
+      cover: normalizeString(row.cover),
+      excerpt,
+      materials: normalizeStringArray(row.materials),
+      tools: normalizeStringArray(row.tools),
+      gallery: normalizeStringArray(row.gallery),
+      featured: row.featured === true,
+      status: normalizeStatus(row.status),
+      process: bodyLikeToString(row.body),
+      storagePath: resolveStoragePath('works', row, slug)
+    } satisfies AdminWorkEntry
+  }))
+  all.sort(sortByNewest)
 
   return {
-    items: filtered.slice(offset, offset + limit),
-    total: filtered.length,
+    items: all.slice(offset, offset + limit),
+    total: all.length,
     page,
     limit
   }
 }
 
 export async function listAdminJournals(opts: {
+  event: H3Event
   page?: number
   limit?: number
   status?: 'draft' | 'published'
@@ -164,35 +114,85 @@ export async function listAdminJournals(opts: {
   const page = Math.max(1, opts.page || 1)
   const limit = Math.max(1, opts.limit || 50)
   const offset = (page - 1) * limit
-  const all = await loadCollectionEntries('journal')
-
-  const filtered = all.filter((journal) => {
-    if (opts.status && journal.status !== opts.status) return false
-    return true
-  })
+  let query = queryCollection<Journal>(opts.event, 'journal')
+  if (opts.status) query = query.where('status', '=', opts.status) as any
+  const rows = await (query.order('date', 'DESC').order('createdAt', 'DESC') as any).all()
+  const all = await Promise.all(rows.map(async (row: any) => {
+    const slug = typeof row.slug === 'string' ? row.slug : ''
+    const excerpt = await resolveExcerpt('journal', slug, normalizeString(row.excerpt), normalizeString(row.description))
+    return {
+      title: normalizeString(row.title),
+      slug,
+      date: normalizeString(row.date),
+      createdAt: normalizeString(row.createdAt),
+      updatedAt: normalizeString(row.updatedAt),
+      cover: normalizeString(row.cover),
+      excerpt,
+      status: normalizeStatus(row.status),
+      content: bodyLikeToString(row.body),
+      storagePath: resolveStoragePath('journal', row, slug)
+    } satisfies AdminJournalEntry
+  }))
+  all.sort(sortByNewest)
 
   return {
-    items: filtered.slice(offset, offset + limit),
-    total: filtered.length,
+    items: all.slice(offset, offset + limit),
+    total: all.length,
     page,
     limit
   }
 }
 
-export async function getAdminWorkBySlug(slug: string): Promise<AdminWorkEntry | null> {
-  const all = await loadCollectionEntries('works')
-  return all.find(work => work.slug === slug) || null
+export async function getAdminWorkBySlug(event: H3Event, slug: string): Promise<AdminWorkEntry | null> {
+  const rows = await queryCollection<Work>(event, 'works').where('slug', '=', slug).limit(1).all() as any[]
+  const row = rows[0]
+  if (!row) return null
+  const category = typeof row.category === 'string' && WORK_CATEGORIES.has(row.category) ? row.category : 'other'
+  const excerpt = await resolveExcerpt('works', slug, normalizeString(row.excerpt), normalizeString(row.description))
+  return {
+    title: normalizeString(row.title),
+    slug,
+    date: normalizeString(row.date),
+    createdAt: normalizeString(row.createdAt),
+    updatedAt: normalizeString(row.updatedAt),
+    category,
+    cover: normalizeString(row.cover),
+    excerpt,
+    materials: normalizeStringArray(row.materials),
+    tools: normalizeStringArray(row.tools),
+    gallery: normalizeStringArray(row.gallery),
+    featured: row.featured === true,
+    status: normalizeStatus(row.status),
+    process: bodyLikeToString(row.body),
+    storagePath: resolveStoragePath('works', row, slug)
+  }
 }
 
-export async function getAdminJournalBySlug(slug: string): Promise<AdminJournalEntry | null> {
-  const all = await loadCollectionEntries('journal')
-  return all.find(journal => journal.slug === slug) || null
+export async function getAdminJournalBySlug(event: H3Event, slug: string): Promise<AdminJournalEntry | null> {
+  const rows = await queryCollection<Journal>(event, 'journal').where('slug', '=', slug).limit(1).all() as any[]
+  const row = rows[0]
+  if (!row) return null
+  const excerpt = await resolveExcerpt('journal', slug, normalizeString(row.excerpt), normalizeString(row.description))
+  return {
+    title: normalizeString(row.title),
+    slug,
+    date: normalizeString(row.date),
+    createdAt: normalizeString(row.createdAt),
+    updatedAt: normalizeString(row.updatedAt),
+    cover: normalizeString(row.cover),
+    excerpt,
+    status: normalizeStatus(row.status),
+    content: bodyLikeToString(row.body),
+    storagePath: resolveStoragePath('journal', row, slug)
+  }
 }
 
-export async function adminWorkSlugExists(slug: string): Promise<boolean> {
-  return !!(await getAdminWorkBySlug(slug))
+export async function adminWorkSlugExists(event: H3Event, slug: string): Promise<boolean> {
+  const rows = await queryCollection<Work>(event, 'works').where('slug', '=', slug).limit(1).all()
+  return rows.length > 0
 }
 
-export async function adminJournalSlugExists(slug: string): Promise<boolean> {
-  return !!(await getAdminJournalBySlug(slug))
+export async function adminJournalSlugExists(event: H3Event, slug: string): Promise<boolean> {
+  const rows = await queryCollection<Journal>(event, 'journal').where('slug', '=', slug).limit(1).all()
+  return rows.length > 0
 }

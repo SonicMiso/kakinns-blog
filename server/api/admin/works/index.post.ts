@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 唯一性检查：同一 collection slug 必须唯一（否则 query slug 会命中多条）
-  if (await adminWorkSlugExists(slug)) {
+  if (await adminWorkSlugExists(event, slug)) {
     throw createError({ statusCode: 409, statusMessage: `slug ${slug} 已存在` })
   }
 
