@@ -1,13 +1,17 @@
 import crypto from 'node:crypto'
 import { setSessionCookie } from '../../utils/session'
 
-function safeEqual(expected: string, provided: string): boolean {
-  // HMAC-hash both values with an ephemeral key to normalize length,
-  // then use timingSafeEqual for constant-time comparison.
-  const key = crypto.randomBytes(32)
-  const expectedHash = crypto.createHmac('sha256', key).update(expected).digest()
-  const providedHash = crypto.createHmac('sha256', key).update(provided).digest()
-  return crypto.timingSafeEqual(expectedHash, providedHash)
+function safeStringEqual(a: string, b: string): boolean {
+  // Pad both buffers to the same length so timingSafeEqual can be used.
+  // The final length-equality check ensures different-length strings are rejected.
+  const aBuf = Buffer.from(a, 'utf8')
+  const bBuf = Buffer.from(b, 'utf8')
+  const len = Math.max(aBuf.length, bBuf.length)
+  const padA = Buffer.alloc(len)
+  const padB = Buffer.alloc(len)
+  aBuf.copy(padA)
+  bBuf.copy(padB)
+  return crypto.timingSafeEqual(padA, padB) && aBuf.length === bBuf.length
 }
 
 export default defineEventHandler(async (event) => {
@@ -22,8 +26,8 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   // Always evaluate both comparisons to avoid short-circuit timing leaks
-  const usernameOk = safeEqual(config.adminUsername, username)
-  const passwordOk = safeEqual(config.adminPassword, password)
+  const usernameOk = safeStringEqual(config.adminUsername, username)
+  const passwordOk = safeStringEqual(config.adminPassword, password)
   if (usernameOk && passwordOk) {
     setSessionCookie(event, 1)
     return { success: true, user: { id: 1, username } }
