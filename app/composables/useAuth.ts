@@ -22,7 +22,9 @@ export function useAuth() {
   async function checkAuth() {
     isLoading.value = true
     try {
-      const res = await $fetch('/api/auth/session')
+      const res = await $fetch('/api/auth/session', {
+        cache: 'no-store'
+      })
       isAuthenticated.value = res.authenticated
     } catch {
       isAuthenticated.value = false
