@@ -12,6 +12,7 @@
 //
 // 对外暴露一个主动刷新方法：暴露在 defineExpose({ refresh })，父组件可以 const chip = ref(); chip.value?.refresh(true)。
 import type { LastPushedCommit, SyncStatusResponse } from '~/types'
+import { LAST_PUSHED_UPDATED_EVENT } from '~/composables/useLastPushed'
 
 const props = withDefaults(defineProps<{
   size?: 'sm' | 'md'
@@ -98,12 +99,20 @@ function startPoll() {
   timer = setInterval(() => refresh(false), POLL_MS)
 }
 
+function onLastPushedUpdated() {
+  refresh(true)
+}
+
 onMounted(async () => {
+  window.addEventListener(LAST_PUSHED_UPDATED_EVENT, onLastPushedUpdated)
   await refresh(false)
   startPoll()
 })
 
-onBeforeUnmount(() => stopPoll())
+onBeforeUnmount(() => {
+  window.removeEventListener(LAST_PUSHED_UPDATED_EVENT, onLastPushedUpdated)
+  stopPoll()
+})
 
 // 父组件写完 / 存完 lastPushed 后，立刻手动刷新一次
 defineExpose({ refresh, restartPoll: startPoll, stopPoll })

@@ -26,6 +26,11 @@ interface ActionsRunLite {
   head_sha?: string
 }
 
+function isActionInProgressStatus(status: unknown): boolean {
+  const s = String(status || '').toLowerCase()
+  return s === 'queued' || s === 'in_progress' || s === 'waiting' || s === 'requested' || s === 'pending' || s === 'progress'
+}
+
 /** 前缀相等（sinceSha 可能是 7 位短 sha，server 可能返回 40 位完整 sha）视为命中 */
 function shaMatches(siteSha: string, sinceSha: string): boolean {
   if (!siteSha || !sinceSha) return false
@@ -210,6 +215,12 @@ export default defineEventHandler(async (event) => {
 
   // ========== 状态判定 ==========
   const isSiteSyncedFinal = isSiteSyncedByPrefix || state.isSiteSyncedByCompare === true
+
+  // Actions 仍在进行中时，优先显示「同步中」。
+  if (state.actionsRun && isActionInProgressStatus(state.actionsRun.status) && !state.actionsRun.conclusion) {
+    state.state = 'syncing'
+    return done(state)
+  }
 
   // 已同步：主站 sha >= sinceSha（无论 Actions 是否 completed，只要主站已生效就算）
   if (isSiteSyncedFinal) {

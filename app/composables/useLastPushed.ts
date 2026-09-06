@@ -4,6 +4,7 @@
 import type { AdminWriteSyncInfo, LastPushedCommit } from '~/types'
 
 const KEY = 'admin:lastPushedCommit'
+export const LAST_PUSHED_UPDATED_EVENT = 'admin:lastPushedCommit:updated'
 
 export function readLastPushed(): LastPushedCommit | null {
   if (import.meta.server) return null
@@ -33,6 +34,7 @@ export function writeLastPushed(sync: AdminWriteSyncInfo | undefined | null, opt
   }
   try {
     window.localStorage.setItem(KEY, JSON.stringify(next))
+    window.dispatchEvent(new CustomEvent(LAST_PUSHED_UPDATED_EVENT, { detail: next }))
   } catch {
     // localStorage 不可用（隐私模式等），静默降级
   }
@@ -42,4 +44,5 @@ export function writeLastPushed(sync: AdminWriteSyncInfo | undefined | null, opt
 export function clearLastPushed() {
   if (import.meta.server) return
   try { window.localStorage.removeItem(KEY) } catch {}
+  try { window.dispatchEvent(new CustomEvent(LAST_PUSHED_UPDATED_EVENT, { detail: null })) } catch {}
 }
