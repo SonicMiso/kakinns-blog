@@ -17,32 +17,26 @@ function getKey() {
   return sessionSecret
 }
 
-function sign(data: string) {
-  return crypto.createHmac('sha256', getKey()).update(data).digest()
+function b64url(buf: Buffer) {
+  return buf.toString('base64url')
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  const aBuf = Buffer.from(a, 'base64url')
-  const bBuf = Buffer.from(b, 'base64url')
-  if (aBuf.length !== bBuf.length) return false
-  return crypto.timingSafeEqual(aBuf, bBuf)
+function sign(data: string) {
+  return crypto.createHmac('sha256', getKey()).update(data).digest('base64url')
 }
 
 export function createCookieSession(userId: number, maxAgeSec = 7 * 24 * 60 * 60) {
   const exp = Math.floor(Date.now() / 1000) + maxAgeSec
   const payload = Buffer.from(JSON.stringify({ uid: userId, exp })).toString('base64url')
-  const sig = sign(payload).toString('base64url')
+  const sig = sign(payload)
   return `${payload}.${sig}`
 }
 
 export function verifyCookieSession(token: string | undefined): { userId: number } | null {
   if (!token) return null
-  const dotIndex = token.lastIndexOf('.')
-  if (dotIndex < 1) return null
-  const payload = token.slice(0, dotIndex)
-  const sig = token.slice(dotIndex + 1)
+  const [payload, sig] = token.split('.')
   if (!payload || !sig) return null
-  if (!timingSafeEqual(sign(payload).toString('base64url'), sig)) return null
+  if (sign(payload) !== sig) return null
   try {
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as {
       uid: number
@@ -61,7 +55,6 @@ export function setSessionCookie(event: any, userId: number) {
   const value = createCookieSession(userId, maxAge)
   setCookie(event, COOKIE_NAME, value, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge
