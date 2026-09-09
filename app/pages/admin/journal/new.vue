@@ -20,6 +20,8 @@ const form = ref({
 })
 
 const saving = ref(false)
+const draftIdentity = computed(() => form.value.slug || '__new__')
+const draft = useAdminDraft('journal', draftIdentity, form)
 
 function generateSlugFromTitle() {
   if (form.value.title && !form.value.slug) {
@@ -39,6 +41,7 @@ async function handleCreate() {
       body: form.value
     })
     writeLastPushed(journal?.sync, { scope: 'journal', description: `新建日志 ${journal?.title || form.value.title}` })
+    await draft.markSaved()
     alert('创建成功')
     await navigateTo(`/admin/journal/${journal.slug}`)
   } catch (e) {
@@ -48,8 +51,9 @@ async function handleCreate() {
   }
 }
 
-onMounted(() => {
-  checkAuth()
+onMounted(async () => {
+  await checkAuth()
+  await draft.initialize()
 })
 
 useHead({
@@ -67,6 +71,8 @@ useHead({
         </div>
         <div class="header-actions">
           <SyncStatusChip size="sm" scope-hint="日志内容同步状态" />
+          <span v-if="draft.isDirty" class="draft-state">未保存修改</span>
+          <span v-else-if="draft.draftSavedAt" class="draft-state">本地草稿已保存</span>
           <button class="btn-save" @click="handleCreate" :disabled="saving">
             {{ saving ? '创建中...' : '创建' }}
           </button>
@@ -152,6 +158,11 @@ useHead({
   font-family: var(--font-serif);
   font-size: 1.75rem;
   font-weight: 600;
+}
+
+.draft-state {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
 .btn-save {

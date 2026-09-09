@@ -34,6 +34,8 @@ const form = ref({
 
 const loading = ref(false)
 const saving = ref(false)
+const draftIdentity = computed(() => slug)
+const draft = useAdminDraft('works', draftIdentity, form)
 
 onMounted(async () => {
   await checkAuth()
@@ -62,6 +64,7 @@ onMounted(async () => {
       featured: !!work.featured,
       status: work.status || 'draft'
     }
+    await draft.initialize()
   } catch (e) {
     alert('加载失败')
     await navigateTo('/admin/works')
@@ -113,6 +116,7 @@ async function handleSave() {
     // 保存成功：用后端返回的真实 updatedAt（不用客户端自己 new Date()，避免时区/秒级不一致）
     if (res && typeof res.updatedAt === 'string') timestamps.value.updatedAt = res.updatedAt
     else timestamps.value.updatedAt = new Date().toISOString()
+    await draft.markSaved()
     alert('保存成功')
   } catch (e: any) {
     const msg = e?.data?.message || e?.message || '保存失败'
@@ -148,6 +152,8 @@ useHead({
         </div>
         <div class="header-actions">
           <SyncStatusChip size="sm" scope-hint="作品内容同步状态" />
+          <span v-if="draft.isDirty" class="draft-state">未保存修改</span>
+          <span v-else-if="draft.draftSavedAt" class="draft-state">本地草稿已保存</span>
           <button class="btn-delete" @click="handleDelete">删除</button>
           <button class="btn-save" @click="handleSave" :disabled="saving || loading">
             {{ saving ? '保存中...' : '保存' }}
@@ -277,6 +283,12 @@ useHead({
 .header-actions {
   display: flex;
   gap: var(--space-3);
+}
+
+.draft-state {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  align-self: center;
 }
 
 .btn-save {
