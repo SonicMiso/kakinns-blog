@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import type { Journal, PaginatedResponse, Work } from '~/types'
+import type {Journal, PaginatedResponse, Work} from '~/types'
 
 const [worksRes, journalsRes] = await Promise.all([
-  $fetch<PaginatedResponse<Work>>('/api/works', { params: { featured: true, limit: 3 } }),
-  $fetch<PaginatedResponse<Journal>>('/api/journal', { params: { limit: 2 } })
+  $fetch<PaginatedResponse<Work>>('/api/works', {params: {featured: true, limit: 3}}),
+  $fetch<PaginatedResponse<Journal>>('/api/journal', {params: {limit: 2}})
 ])
 
 const works = worksRes.items
 const journals = journalsRes.items
 
 const heroMainImage = works?.find(
-  item => item.cover
+    item => item.cover
 )?.cover || ''
-const studioCornerImage =
-  journals.find(item => item.cover)?.cover ||
-  'https://images.pexels.com/photos/4226806/pexels-photo-4226806.jpeg?auto=compress&cs=tinysrgb&w=1600'
+const studioCornerImage = '/studio-corner.jpg'
 
 useHead({
   title: 'Kakinn\'s Studio — 手工艺个人工作室'
