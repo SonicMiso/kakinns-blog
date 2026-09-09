@@ -1,9 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { queryCollection } from '@nuxt/content/server'
 import type { H3Event } from 'h3'
 import type { Journal, PaginatedResponse, Work } from '~/types'
-import { bodyLikeToString } from './rawContent'
 import { parseMarkdownSource, type CollectionName } from './contentSource'
 
 export interface AdminWorkEntry extends Work {
@@ -67,10 +65,6 @@ function sortByNewest<T extends { date: string, createdAt: string }>(a: T, b: T)
   const dateCompare = b.date.localeCompare(a.date)
   if (dateCompare !== 0) return dateCompare
   return b.createdAt.localeCompare(a.createdAt)
-}
-
-function ensureStoragePath(collection: CollectionName, slug: string): string {
-  return `content/${collection}/${slug}.md`
 }
 
 async function listMarkdownFilesRecursive(dir: string): Promise<string[]> {
@@ -149,62 +143,12 @@ async function readLocalJournals(): Promise<AdminJournalEntry[]> {
   return items
 }
 
-async function readWorksFromCollection(event: H3Event): Promise<AdminWorkEntry[]> {
-  const rows = await (queryCollection<Work>(event, 'works').order('date', 'DESC').order('createdAt', 'DESC') as any).all()
-  return rows.map((row: any) => {
-    const slug = normalizeString(row.slug)
-    const category = normalizeString(row.category)
-    return {
-      title: normalizeString(row.title),
-      slug,
-      date: normalizeString(row.date),
-      createdAt: normalizeString(row.createdAt),
-      updatedAt: normalizeString(row.updatedAt),
-      category: WORK_CATEGORIES.has(category) ? category : 'other',
-      cover: normalizeString(row.cover),
-      excerpt: normalizeString(row.excerpt) || normalizeString(row.summary) || normalizeString(row.description),
-      materials: normalizeStringArray(row.materials),
-      tools: normalizeStringArray(row.tools),
-      gallery: normalizeStringArray(row.gallery),
-      featured: row.featured === true,
-      status: normalizeStatus(row.status),
-      process: bodyLikeToString(row.body) || normalizeString(row.process),
-      storagePath: ensureStoragePath('works', slug)
-    } satisfies AdminWorkEntry
-  })
+async function loadAdminWorks(): Promise<AdminWorkEntry[]> {
+  return readLocalWorks()
 }
 
-async function readJournalsFromCollection(event: H3Event): Promise<AdminJournalEntry[]> {
-  const rows = await (queryCollection<Journal>(event, 'journal').order('date', 'DESC').order('createdAt', 'DESC') as any).all()
-  return rows.map((row: any) => {
-    const slug = normalizeString(row.slug)
-    return {
-      title: normalizeString(row.title),
-      slug,
-      date: normalizeString(row.date),
-      createdAt: normalizeString(row.createdAt),
-      updatedAt: normalizeString(row.updatedAt),
-      cover: normalizeString(row.cover),
-      excerpt: normalizeString(row.excerpt) || normalizeString(row.summary) || normalizeString(row.description),
-      status: normalizeStatus(row.status),
-      content: bodyLikeToString(row.body) || normalizeString(row.content),
-      storagePath: ensureStoragePath('journal', slug)
-    } satisfies AdminJournalEntry
-  })
-}
-
-async function loadAdminWorks(event?: H3Event): Promise<AdminWorkEntry[]> {
-  const local = await readLocalWorks()
-  if (local.length > 0) return local
-  if (!event) return []
-  return readWorksFromCollection(event)
-}
-
-async function loadAdminJournals(event?: H3Event): Promise<AdminJournalEntry[]> {
-  const local = await readLocalJournals()
-  if (local.length > 0) return local
-  if (!event) return []
-  return readJournalsFromCollection(event)
+async function loadAdminJournals(): Promise<AdminJournalEntry[]> {
+  return readLocalJournals()
 }
 
 export async function listAdminWorks(opts: {
@@ -217,7 +161,7 @@ export async function listAdminWorks(opts: {
   const page = Math.max(1, opts.page || 1)
   const limit = Math.max(1, opts.limit || 50)
   const offset = (page - 1) * limit
-  const all = await loadAdminWorks(opts.event)
+  const all = await loadAdminWorks()
 
   const filtered = all.filter((row) => {
     if (opts.category && row.category !== opts.category) return false
@@ -244,7 +188,7 @@ export async function listAdminJournals(opts: {
   const page = Math.max(1, opts.page || 1)
   const limit = Math.max(1, opts.limit || 50)
   const offset = (page - 1) * limit
-  const all = await loadAdminJournals(opts.event)
+  const all = await loadAdminJournals()
 
   const filtered = all.filter((row) => {
     if (opts.status && row.status !== opts.status) return false
@@ -262,12 +206,12 @@ export async function listAdminJournals(opts: {
 }
 
 export async function getAdminWorkBySlug(event: H3Event, slug: string): Promise<AdminWorkEntry | null> {
-  const all = await loadAdminWorks(event)
+  const all = await loadAdminWorks()
   return all.find(item => item.slug === slug) || null
 }
 
 export async function getAdminJournalBySlug(event: H3Event, slug: string): Promise<AdminJournalEntry | null> {
-  const all = await loadAdminJournals(event)
+  const all = await loadAdminJournals()
   return all.find(item => item.slug === slug) || null
 }
 

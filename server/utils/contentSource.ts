@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises'
-import path from 'node:path'
 import { parse as parseYaml } from 'yaml'
 
 export type CollectionName = 'works' | 'journal'
@@ -10,18 +8,6 @@ export interface MarkdownSource {
 }
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
-
-export async function tryReadCollectionSource(collection: CollectionName, slug: string): Promise<MarkdownSource | null> {
-  const fullPath = path.resolve(process.cwd(), 'content', collection, `${slug}.md`)
-
-  try {
-    const raw = await readFile(fullPath, 'utf8')
-    return parseMarkdownSource(raw)
-  } catch (error: any) {
-    if (error?.code === 'ENOENT') return null
-    throw error
-  }
-}
 
 export function parseMarkdownSource(raw: string): MarkdownSource {
   const match = raw.match(FRONTMATTER_RE)
@@ -39,14 +25,3 @@ export function parseMarkdownSource(raw: string): MarkdownSource {
   }
 }
 
-export function readFrontmatterString(
-  source: MarkdownSource | null,
-  key: string,
-  fallback = ''
-): string {
-  if (!source || !Object.prototype.hasOwnProperty.call(source.frontmatter, key)) return fallback
-  const value = source.frontmatter[key]
-  if (typeof value === 'string') return value
-  if (value === undefined || value === null) return ''
-  return String(value)
-}

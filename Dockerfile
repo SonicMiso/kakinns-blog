@@ -41,6 +41,8 @@ ENV NODE_ENV=production \
 
 COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/package.json ./package.json
+# 后台编辑直接读取原始 Markdown；运行期必须保留 content/。
+COPY --from=builder /app/content ./content
 
 EXPOSE 3000
 
