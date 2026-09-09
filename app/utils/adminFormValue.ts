@@ -1,9 +1,6 @@
-import { minimarkToMarkdown } from '~/utils/rawContentClient'
-
 function toStringSafe(value: unknown): string {
   if (value === undefined || value === null) return ''
   if (typeof value === 'string') return value
-  if (typeof value === 'object') return minimarkToMarkdown(value)
   return String(value)
 }
 

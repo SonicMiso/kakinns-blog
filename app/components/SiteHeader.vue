@@ -70,7 +70,7 @@ function closeMenu() {
 }
 
 .logo {
-  font-family: var(--font-serif) serif;
+  font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-text);

@@ -72,10 +72,9 @@ export interface JournalFormData {
 }
 
 export const CATEGORIES = [
-  { value: 'wood', label: '木作' },
+  { value: 'bead-art', label: '串珠' },
   { value: 'ceramics', label: '陶瓷' },
   { value: 'textile', label: '织物' },
-  { value: 'paper', label: '纸艺' },
   { value: 'metal', label: '金工' },
   { value: 'other', label: '其他' }
 ] as const

@@ -107,7 +107,7 @@ useHead({
 }
 
 .login-title {
-  font-family: var(--font-serif),serif;
+  font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--color-text);

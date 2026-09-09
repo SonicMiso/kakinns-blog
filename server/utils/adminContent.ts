@@ -14,7 +14,7 @@ export interface AdminJournalEntry extends Journal {
   storagePath: string
 }
 
-const WORK_CATEGORIES = new Set(['wood', 'ceramics', 'textile', 'paper', 'metal', 'other'])
+const WORK_CATEGORIES = new Set(['bead-art', 'ceramics', 'textile', 'metal', 'other'])
 const CONTENT_STATUSES = new Set(['draft', 'published'])
 
 function normalizeStatus(value: unknown): 'draft' | 'published' {

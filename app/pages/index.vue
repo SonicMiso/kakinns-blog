@@ -14,7 +14,7 @@ const heroMainImage = works?.find(
 )?.cover || ''
 const studioCornerImage =
   journals.find(item => item.cover)?.cover ||
-  'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg?auto=compress&cs=tinysrgb&w=1600'
+  'https://images.pexels.com/photos/4226806/pexels-photo-4226806.jpeg?auto=compress&cs=tinysrgb&w=1600'
 
 useHead({
   title: 'Kakinn\'s Studio — 手工艺个人工作室'
@@ -243,7 +243,7 @@ useHead({
 }
 
 .placeholder-label {
-  font-family: var(--font-serif), serif;
+  font-family: var(--font-serif);
   font-size: 1.25rem;
   color: var(--color-text-muted);
   opacity: 0.5;

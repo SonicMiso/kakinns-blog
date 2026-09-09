@@ -26,7 +26,7 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: '手工艺个人工作室 — 记录木作、陶瓷与织物的制作过程' }
+        { name: 'description', content: '手工艺个人工作室 — 记录串珠、陶瓷、金工与织物的制作过程' }
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }

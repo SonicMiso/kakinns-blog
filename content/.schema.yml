@@ -39,12 +39,14 @@ collections:
         required: true
         label: 作品分类
         options:
-          - value: wood
-            label: 木作
+          - value: bead-art
+            label: 串珠
           - value: ceramic
             label: 陶瓷
           - value: textile
             label: 织物
+          - value: mental
+            label: 金工
           - value: other
             label: 其他
       cover:

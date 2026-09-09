@@ -83,7 +83,7 @@ watch(isAuthenticated, (val) => {
 
 .brand {
   display: block;
-  font-family: var(--font-serif),serif;
+  font-family: var(--font-serif);
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text);

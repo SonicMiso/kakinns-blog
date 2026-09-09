@@ -51,7 +51,7 @@ useHead({
         <p class="page-eyebrow heading-eyebrow">Works</p>
         <h1 class="page-title">全部作品</h1>
         <p class="page-desc">
-          木作、陶瓷、织物……每一件作品都由手工完成，记录着材料与时间的对话。
+          串珠、陶瓷、织物……每一件作品都由手工完成，记录着材料与时间的对话。
         </p>
       </section>
 

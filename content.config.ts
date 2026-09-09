@@ -18,7 +18,7 @@ export const collections = {
       date: z.string(),        // 发布日期（业务语义，可能≠createdAt）
       createdAt: z.string(),   // 创建时间 ISO8601（后台新建时写入）
       updatedAt: z.string(),   // 更新时间 ISO8601（新建/修改时均写入）
-      category: z.enum(['wood', 'ceramics', 'textile', 'paper', 'metal', 'other']),
+      category: z.enum(['bead-art', 'ceramics', 'paper', 'metal', 'other']),
       cover: z.string().default(''),
       excerpt: z.string().default(''),
       materials: z.array(z.string()).default([]),

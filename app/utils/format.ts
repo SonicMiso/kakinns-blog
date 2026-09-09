@@ -42,10 +42,9 @@ export function formatDateLong(dateStr: string): string {
 
 export function getCategoryLabel(category: string): string {
   const map: Record<string, string> = {
-    wood: '木作',
+    'bead-art': '串珠',
     ceramics: '陶瓷',
     textile: '织物',
-    paper: '纸艺',
     metal: '金工',
     other: '其他'
   }
