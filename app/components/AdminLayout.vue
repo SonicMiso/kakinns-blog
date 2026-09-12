@@ -39,6 +39,7 @@ watch(isAuthenticated, (val) => {
         </ul>
       </nav>
       <div class="sidebar-footer">
+        <ImageUploader />
         <button class="logout-btn" @click="logout">
           退出登录
         </button>
@@ -150,6 +151,9 @@ watch(isAuthenticated, (val) => {
 }
 
 .sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
   border-top: 1px solid var(--color-border-light);
 }

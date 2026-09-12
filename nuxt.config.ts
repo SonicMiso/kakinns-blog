@@ -53,6 +53,10 @@ export default defineNuxtConfig({
     githubCommitterName: 'Kakinn\'s Studio Bot',
     githubCommitterEmail: 'bot@kakinn.studio',
     githubBaseUrl: '',
+    githubImageOwner: 'SonicMiso',
+    githubImageRepo: 'blog-imgs',
+    githubImageBranch: 'main',
+    githubImageCdnBaseUrl: 'https://cdn.jsdelivr.net/gh',
     testenv: '',
     public: {
       siteName: 'Kakinn\'s Studio',
