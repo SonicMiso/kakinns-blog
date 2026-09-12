@@ -215,7 +215,8 @@ export async function deleteManagedImage(path: string): Promise<{ path: string; 
       const { data: baseTree } = await octokit.rest.git.getTree({
         owner: cfg.owner,
         repo: cfg.repo,
-        tree_sha: baseCommit.tree.sha
+        tree_sha: baseCommit.tree.sha,
+        recursive: 'true'
       })
       const target = baseTree.tree.find(item => item.path === normalized && item.type === 'blob')
       if (!target?.sha) {
