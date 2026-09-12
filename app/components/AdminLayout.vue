@@ -4,7 +4,8 @@ const { isAuthenticated, isLoading, checkAuth, logout } = useAuth()
 const navItems = [
   { href: '/admin', label: '仪表盘', icon: 'dashboard' },
   { href: '/admin/works', label: '作品管理', icon: 'works' },
-  { href: '/admin/journal', label: '日志管理', icon: 'journal' }
+  { href: '/admin/journal', label: '日志管理', icon: 'journal' },
+  { href: '/admin/images', label: '图片管理', icon: 'images' }
 ]
 
 onMounted(() => {
@@ -34,7 +35,7 @@ watch(isAuthenticated, (val) => {
             <NuxtLink :to="item.href" class="nav-link">
               <span class="nav-icon" :class="`icon-${item.icon}`"></span>
               <span class="nav-label">{{ item.label }}</span>
-            </NuxtLink>
+            </NuLink>
           </li>
         </ul>
       </nav>
@@ -147,6 +148,10 @@ watch(isAuthenticated, (val) => {
 
 .icon-journal {
   clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 0 100%);
+}
+
+.icon-images {
+  clip-path: polygon(0 20%, 35% 20%, 45% 5%, 100% 5%, 100% 100%, 0 100%);
 }
 
 .sidebar-footer {
