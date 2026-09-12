@@ -74,7 +74,6 @@ useHead({
         </div>
         <div class="header-actions">
           <SyncStatusChip size="sm" scope-hint="作品内容同步状态" />
-          <ImageUploader />
           <NuxtLink to="/admin/works/new" class="btn-primary">新建作品</NuxtLink>
         </div>
       </header>
