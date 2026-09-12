@@ -12,7 +12,6 @@ const page = ref(1)
 const limit = ref(10)
 const statusFilter = ref<string>('')
 
-// admin = ssr:false，纯 CSR，$fetch 自动带浏览器 cookie，无需 useRequestHeaders
 const { data: journalsData, refresh, error: journalsError } = await useAsyncData('admin-journal', () => {
   return $fetch('/api/admin/journal', {
     query: {
@@ -75,7 +74,6 @@ useHead({
         </div>
         <div class="header-actions">
           <SyncStatusChip size="sm" scope-hint="日志内容同步状态" />
-          <ImageUploader />
           <NuxtLink to="/admin/journal/new" class="btn-primary">新建日志</NuxtLink>
         </div>
       </header>
