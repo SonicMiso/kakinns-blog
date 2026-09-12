@@ -1,4 +1,4 @@
-import { deleteManagedImage } from '../../../utils/imageHosting'
+import { deleteManagedImage } from '../../utils/imageHosting'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ path?: string }>(event)

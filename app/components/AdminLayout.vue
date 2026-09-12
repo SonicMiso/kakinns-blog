@@ -35,7 +35,7 @@ watch(isAuthenticated, (val) => {
             <NuxtLink :to="item.href" class="nav-link">
               <span class="nav-icon" :class="`icon-${item.icon}`"></span>
               <span class="nav-label">{{ item.label }}</span>
-            </NuLink>
+            </NuxtLink>
           </li>
         </ul>
       </nav>
