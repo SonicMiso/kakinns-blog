@@ -1,4 +1,4 @@
-import { uploadImageToGitHub, getAllowedImageExtension, MAX_IMAGE_SIZE } from '../../../utils/imageHosting'
+import { uploadImageToGitHub, getAllowedImageExtension, MAX_IMAGE_SIZE } from '../../utils/imageHosting'
 
 export default defineEventHandler(async (event) => {
   const parts = await readMultipartFormData(event)
