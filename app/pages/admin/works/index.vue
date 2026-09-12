@@ -12,7 +12,6 @@ const page = ref(1)
 const limit = ref(10)
 const statusFilter = ref<string>('')
 
-// admin = ssr:false，纯 CSR，$fetch 自动带浏览器 cookie，无需 useRequestHeaders
 const { data: worksData, refresh, error: worksError } = await useAsyncData('admin-works', () => {
   return $fetch('/api/admin/works', {
     query: {
@@ -75,6 +74,7 @@ useHead({
         </div>
         <div class="header-actions">
           <SyncStatusChip size="sm" scope-hint="作品内容同步状态" />
+          <ImageUploader />
           <NuxtLink to="/admin/works/new" class="btn-primary">新建作品</NuxtLink>
         </div>
       </header>
